@@ -1,0 +1,41 @@
+# C++ ignore
+
+*.o
+*.so
+*.a
+
+# CMake ignore
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Makefile
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+build*
+
+# QT Creator 
+CMakeLists.txt.user*
+*.autosave
+*.moc
+*build-*
+
+# MAC, vim, emacs goofiness
+.DS_STORE
+.DS_STORE?
+*~
+*#
+.#*
+.nfs*
+.*.sw*
+
+# CUDA
+*.i
+*.ii
+*.ptx
+*.cubin
+*.fatbin
+*.gpu
+
+
+
