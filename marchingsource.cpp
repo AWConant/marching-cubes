@@ -16,6 +16,8 @@
 #include <iostream>
 #include "stdio.h"
 #include "math.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/noise.hpp>
 //This program requires the OpenGL and GLUT libraries
 // You can obtain them for free from http://www.opengl.org
 #include "GL/glut.h"
@@ -33,8 +35,8 @@ struct GLvector
 //a2fVertexOffset lists the positions, relative to vertex0, of each of the 8 vertices of a cube
 static const GLfloat a2fVertexOffset[8][3] =
 {
-  {0.0, 0.0, 0.0},{1.0, 0.0, 0.0},{1.0, 1.0, 0.0},{0.0, 1.0, 0.0},
-  {0.0, 0.0, 1.0},{1.0, 0.0, 1.0},{1.0, 1.0, 1.0},{0.0, 1.0, 1.0}
+  {0.0, 0.0, 0.0},{2.0, 0.0, 0.0},{2.0, 2.0, 0.0},{0.0, 2.0, 0.0},
+  {0.0, 0.0, 2.0},{2.0, 0.0, 2.0},{2.0, 2.0, 2.0},{0.0, 2.0, 2.0}
 };
 
 //a2iEdgeConnection lists the index of the endpoint vertices for each of the 12 edges of the cube
@@ -48,9 +50,9 @@ static const GLint a2iEdgeConnection[12][2] =
 //a2fEdgeDirection lists the direction vector (vertex1-vertex0) for each edge in the cube
 static const GLfloat a2fEdgeDirection[12][3] =
 {
-  {1.0, 0.0, 0.0},{0.0, 1.0, 0.0},{-1.0, 0.0, 0.0},{0.0, -1.0, 0.0},
-  {1.0, 0.0, 0.0},{0.0, 1.0, 0.0},{-1.0, 0.0, 0.0},{0.0, -1.0, 0.0},
-  {0.0, 0.0, 1.0},{0.0, 0.0, 1.0},{ 0.0, 0.0, 1.0},{0.0,  0.0, 1.0}
+  {2.0, 0.0, 0.0},{0.0, 2.0, 0.0},{-2.0, 0.0, 0.0},{0.0, -2.0, 0.0},
+  {2.0, 0.0, 0.0},{0.0, 2.0, 0.0},{-2.0, 0.0, 0.0},{0.0, -2.0, 0.0},
+  {0.0, 0.0, 2.0},{0.0, 0.0, 2.0},{ 0.0, 0.0, 2.0},{0.0,  0.0, 2.0}
 };
 
 //a2iTetrahedronEdgeConnection lists the index of the endpoint vertices for each of the 6 edges of the tetrahedron
@@ -86,7 +88,7 @@ static const GLfloat afSpecularBlue [] = {0.25, 0.25, 1.00, 1.00};
 
 
 GLenum    ePolygonMode = GL_FILL;
-GLint     iDataSetSize = 16;
+GLint     iDataSetSize = 30;
 GLfloat   fStepSize = 1.0/iDataSetSize;
 GLfloat   fTargetValue = 48.0;
 GLfloat   fTime = 0.0;
@@ -135,7 +137,9 @@ int main(int argc, char **argv)
   glutKeyboardFunc( vKeyboard );
   glutSpecialFunc( vSpecial );
 
-  glClearColor( 0.0, 0.0, 0.0, 1.0 ); 
+  // bookmark: this is the background color
+  glClearColor( 0.0, 0.5, 1.0, 1.0 ); 
+
   glClearDepth( 1.0 ); 
 
   glEnable(GL_DEPTH_TEST); 
@@ -169,7 +173,7 @@ GLvoid vPrintHelp()
 
   printf("+/-  increase/decrease sample density\n");
   printf("PageUp/PageDown  increase/decrease surface value\n");
-  printf("s  change sample function\n");
+  // printf("s  change sample function\n");
   printf("c  toggle marching cubes / marching tetrahedrons\n");
   printf("w  wireframe on/off\n");
   printf("l  toggle lighting / color-by-normal\n");
@@ -243,25 +247,25 @@ void vKeyboard(unsigned char cKey, int iX, int iY)
         vMarchCube = vMarchCube1;//Use Marching Cubes
       }
     } break;
-    case 's' :
-    {
-      if(fSample == fSample1)
-      {
-        fSample = fSample2;
-      }
-      else if(fSample == fSample2)
-      {
-        fSample = fSample3;
-      }
-      else if(fSample == fSample3)
-      {
-        fSample = fSample4;
-      }
-      else
-      {
-        fSample = fSample1;
-      }
-    } break;
+    // case 's' :
+    // {
+      // if(fSample == fSample1)
+      // {
+        // fSample = fSample2;
+      // }
+      // else if(fSample == fSample2)
+      // {
+        // fSample = fSample3;
+      // }
+      // else if(fSample == fSample3)
+      // {
+        // fSample = fSample4;
+      // }
+      // else
+      // {
+        // fSample = fSample1;
+      // }
+    // } break;
     case 'l' :
     {
       if(bLight)
@@ -315,8 +319,8 @@ void vIdle()
 
 void vDrawScene() // bookmark
 { 
-  static GLfloat fPitch = 0.0;
-  static GLfloat fYaw   = 0.0;
+  static GLfloat fPitch = 60.0;
+  static GLfloat fYaw   = 30.0;
   static GLfloat fTime = 0.0;
 
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ); 
@@ -343,7 +347,7 @@ void vDrawScene() // bookmark
   glPushAttrib(GL_LIGHTING_BIT);
     glDisable(GL_LIGHTING);
     glColor3f(1.0, 1.0, 1.0);
-    glutWireCube(1.0); 
+    // glutWireCube(1.0); 
   glPopAttrib(); 
 
 
@@ -485,14 +489,47 @@ GLfloat fSample3(GLfloat fX, GLfloat fY, GLfloat fZ)
   return fResult;
 }
 
+//------------------------------------------------------------------------------
+// bookmark
+// these noise functions are used in fSample4 to create the terrain shape
+float basicFreq(float x, float y, float freq, bool periodic = true) {
+  // x,y in range [0..1]
+  glm::vec2 p(x * freq, y * freq);
+  float val = 0.0f;
+  if (periodic) {
+    val = glm::perlin(p, glm::vec2(freq));
+  } else {
+    val = glm::perlin(p);
+  }
+
+  return val;
+}
+
+
+/* lumpy */
+float lumpy(float x, float y) {
+  float freq = 4;
+  float amp = 0.1;
+  float steps = 4;
+  float val = 0;
+  while (steps > 0) {
+    val += amp * basicFreq(x, y, freq);
+    amp *= 0.5;
+    freq *= 2;
+    steps--;
+  }
+  return val;
+}
+
 
 GLfloat fSample4(GLfloat fX, GLfloat fY, GLfloat fZ)
 {
-  GLfloat fHeight = 1.43 + pow((((fX - 0.5 + fY - 0.5) / 2)- 0.5), 2);
+  GLfloat fHeight = lumpy(fX, fY) + 1.1;
   GLdouble fResult = (fHeight - fZ)*50.0;
 
   return fResult;
 }
+//------------------------------------------------------------------------------
 
 
 //vGetNormal() finds the gradient of the scalar field at a point
