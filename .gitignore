@@ -3,6 +3,7 @@
 *.o
 *.so
 *.a
+mc
 
 # CMake ignore
 CMakeCache.txt
