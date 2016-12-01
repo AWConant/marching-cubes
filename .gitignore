@@ -29,6 +29,8 @@ CMakeLists.txt.user*
 .#*
 .nfs*
 .*.sw*
+ex/
+paul/
 
 # CUDA
 *.i
