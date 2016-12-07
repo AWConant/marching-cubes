@@ -50,9 +50,9 @@ static const GLint a2iEdgeConnection[12][2] =
 //a2fEdgeDirection lists the direction vector (vertex1-vertex0) for each edge in the cube
 static const GLfloat a2fEdgeDirection[12][3] =
 {
-  {2.0, 0.0, 0.0},{0.0, 2.0, 0.0},{-2.0, 0.0, 0.0},{0.0, -2.0, 0.0},
-  {2.0, 0.0, 0.0},{0.0, 2.0, 0.0},{-2.0, 0.0, 0.0},{0.0, -2.0, 0.0},
-  {0.0, 0.0, 2.0},{0.0, 0.0, 2.0},{ 0.0, 0.0, 2.0},{0.0,  0.0, 2.0}
+  {1.0, 0.0, 0.0},{0.0, 1.0, 0.0},{-1.0, 0.0, 0.0},{0.0, -1.0, 0.0},
+  {1.0, 0.0, 0.0},{0.0, 1.0, 0.0},{-1.0, 0.0, 0.0},{0.0, -1.0, 0.0},
+  {0.0, 0.0, 1.0},{0.0, 0.0, 1.0},{ 0.0, 0.0, 1.0},{0.0,  0.0, 1.0}
 };
 
 //a2iTetrahedronEdgeConnection lists the index of the endpoint vertices for each of the 6 edges of the tetrahedron
@@ -88,13 +88,14 @@ static const GLfloat afSpecularBlue [] = {0.25, 0.25, 1.00, 1.00};
 
 
 GLenum    ePolygonMode = GL_FILL;
-GLint     iDataSetSize = 30;
-GLfloat   fStepSize = 1.0/iDataSetSize;
+GLint     iDataSetSize = 40;
+GLfloat   fStepSize = 1.0/20;
+// GLfloat   fStepSize = 1.0/iDataSetSize;
 GLfloat   fTargetValue = 48.0;
 GLfloat   fTime = 0.0;
 GLvector  sSourcePoint[3];
 GLboolean bSpin = false;
-GLboolean bMove = true;
+GLboolean bMove = false;
 GLboolean bLight = true;
 
 
@@ -123,8 +124,9 @@ int main(int argc, char **argv)
   GLfloat afPropertiesDiffuse [] = {0.75, 0.75, 0.75, 1.00}; 
   GLfloat afPropertiesSpecular[] = {1.00, 1.00, 1.00, 1.00}; 
 
-  GLsizei iWidth = 640.0; 
-  GLsizei iHeight = 480.0; 
+  // Width and height of window
+  GLsizei iWidth = 1000.0; 
+  GLsizei iHeight = 980.0; 
 
   glutInit(&argc, argv);
   glutInitWindowPosition( 0, 0);
@@ -345,19 +347,17 @@ void vDrawScene() // bookmark
   glRotatef(    fYaw, 0.0, 0.0, 1.0);
 
   glPushAttrib(GL_LIGHTING_BIT);
-    glDisable(GL_LIGHTING);
-    glColor3f(1.0, 1.0, 1.0);
-    // glutWireCube(1.0); 
+  glDisable(GL_LIGHTING);
+  glColor3f(1.0, 1.0, 1.0);
+  // glutWireCube(1.0); 
   glPopAttrib(); 
-
 
   glPushMatrix(); 
   glTranslatef(-0.5, -0.5, -0.5);
   glBegin(GL_TRIANGLES);
-    vMarchingCubes();
+  vMarchingCubes();
   glEnd();
   glPopMatrix(); 
-
 
   glPopMatrix(); 
 
@@ -524,9 +524,12 @@ float lumpy(float x, float y) {
 
 GLfloat fSample4(GLfloat fX, GLfloat fY, GLfloat fZ)
 {
-  GLfloat fHeight = lumpy(fX, fY) + 1.1;
+  // GLfloat fHeight = lumpy(fX, fY) + 1.1;
+  // GLdouble fResult = 52.5;
+  GLfloat fHeight = 1.1;
   GLdouble fResult = (fHeight - fZ)*50.0;
-
+  if (fZ > 1) return 49;
+  else return 0;
   return fResult;
 }
 //------------------------------------------------------------------------------
