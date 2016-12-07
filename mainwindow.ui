@@ -6,15 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>650</width>
-    <height>520</height>
+    <width>900</width>
+    <height>900</height>
    </rect>
   </property>
   <property name="focusPolicy">
    <enum>Qt::NoFocus</enum>
   </property>
   <property name="windowTitle">
-   <string>Spacehog &quot;In the Meantime&quot;</string>
+   <string>Procedural Terrain</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
