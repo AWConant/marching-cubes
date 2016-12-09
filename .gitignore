@@ -29,8 +29,10 @@ CMakeLists.txt.user*
 .#*
 .nfs*
 .*.sw*
-ex/
-paul/
+marching_cubes/paul/
+marching_cubes/
+marching_cubes/ex/
+marching_cubes/TestG80/
 
 # CUDA
 *.i

@@ -1,4 +1,6 @@
 #include "mypanelopengl.h"
+#include "voxel.h"
+
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
