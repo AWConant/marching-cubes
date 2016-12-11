@@ -1,16 +1,16 @@
 #pragma once
 
-#include "voxel.h"
-
 #include <QtOpenGL>
 #include <cmath>
+#include "voxel.h"
 
 namespace terr {
     typedef QVector3D vec3;
     typedef QVector4D vec4;
 
-float sample(vec3 p);
-Voxel *marchCube(vec3 corner, float stepSize);
+float density(vec3 p);
+vec3 lerp(vec3 p1, vec3 p2, float d1, float d2);
+Voxel *marchCube(float ***densities, vec3 corner, float stepSize);
 Voxel **marchAll(vec3 fieldCorner, float fieldSize, int res);
 
 } // namespace

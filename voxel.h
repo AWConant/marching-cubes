@@ -7,6 +7,7 @@ namespace terr {
     typedef QVector4D vec4;
 
 class Voxel {
+
 public:
     Voxel(vec3 corner, vec3 *triangles, int numTriangles);
     ~Voxel();
@@ -23,8 +24,8 @@ protected:
     vec4 m_color;
     QOpenGLVertexArrayObject* m_vao;
     QOpenGLBuffer* m_vbo;
-    vec3 *m_triangles;
     vec3 m_corner;
+    vec3 *m_triangles;
     int m_numTriangles;
 };
 

@@ -48,8 +48,8 @@ set(SHADERS
   shaders/fshader.glsl
 )
 
-set(SHDRS matrixstack.h printmatrix.h camera.h)
-set(SSRC matrixstack.cpp printmatrix.cpp camera.cpp)
+set(SHDRS voxel.h marching.h matrixstack.h printmatrix.h camera.h)
+set(SSRC voxel.cpp marching.cpp matrixstack.cpp printmatrix.cpp camera.cpp)
 
 add_library(libfinal ${SHDRS} ${SSRC})
 
