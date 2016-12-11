@@ -2,15 +2,15 @@
 
 using namespace terr;
 
-Voxel::Voxel(vec3 corner):
-    m_color(0,0,1,1), m_vao(NULL), m_vbo(NULL), m_corner(corner),
+Voxel::Voxel(vec3 corner, vec3 *triangles, int numTriangles):
+    m_color(0,0,1,1), m_vao(NULL), m_vbo(NULL),
+    m_corner(corner), m_triangles(triangles), m_numTriangles(numTriangles)
 {
-
     if(initVBO()){
-        int DataSize = m_numTriangles * 3 * sizeof(vec3);
+        int dataSize = m_numTriangles * 3 * sizeof(vec3);
         m_vbo->bind();
-        m_vbo->allocate(DataSize);
-        m_vbo->write(0,vertices,DataSize);
+        m_vbo->allocate(dataSize);
+        m_vbo->write(0, m_triangles, dataSize);
         m_vbo->release();
     }
 }
@@ -35,20 +35,26 @@ Voxel::~Voxel(){
         m_vao->release();
         delete m_vao; m_vao=NULL;
     }
+    delete m_triangles; m_triangles=NULL;
 }
 
-void Sphere::draw(QOpenGLShaderProgram* prog){
+void Voxel::draw(QOpenGLShaderProgram* prog){
     if(!prog){ return; }
     m_vao->bind();
     m_vbo->bind();
     prog->bind();
-    prog->setUniformValue("vColor",m_color);
+
+    prog->setUniformValue("vColor", m_color);
     prog->enableAttributeArray("vPosition");
-    prog->setAttributeBuffer("vPosition",GL_FLOAT,0,3,0); // Check these nums
+    prog->setAttributeBuffer("vPosition", GL_FLOAT, 0, 3, 0); // Check these nums
 
-    prog->enableAttributeArray("vTexture");
-    int texOffset = (m_stacks-2)*m_stripsize+2*(m_slices+2);
-    prog->setAttributeBuffer("vTexture",GL_FLOAT,texOffset*sizeof(vec3),2,0);
+    //prog->enableAttributeArray("vTexture");
+    //int texOffset = (m_stacks-2)*m_stripsize+2*(m_slices+2);
+    //prog->setAttributeBuffer("vTexture",GL_FLOAT,texOffset*sizeof(vec3),2,0);
 
-    glDrawArrays(GL_TRIANGLES, 0, m_numTriangles);
+    glDrawArrays(GL_TRIANGLES, 0, m_numTriangles*3);
+
+    prog->bind();
+    m_vbo->bind();
+    m_vao->bind();
 }

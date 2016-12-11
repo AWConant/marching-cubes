@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QVector3D>
+#include <QtOpenGL>
 
 namespace terr {
     typedef QVector3D vec3;
@@ -8,7 +8,7 @@ namespace terr {
 
 class Voxel {
 public:
-    Voxel(vec3 corner);
+    Voxel(vec3 corner, vec3 *triangles, int numTriangles);
     ~Voxel();
 
     void draw(QOpenGLShaderProgram *prog);
