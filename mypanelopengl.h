@@ -5,6 +5,7 @@
 #include <QMatrix4x4>
 #include "matrixstack.h"
 #include "camera.h"
+#include "voxel.h"
 
 
 class MyPanelOpenGL : public QOpenGLWidget {
@@ -25,6 +26,11 @@ public:
     virtual ~MyPanelOpenGL();
 
 private:
+    /* Array of pointers to voxels dividing up the data field */
+    terr::Voxel **m_voxels;
+
+    int m_res;
+
     /* perspective projection angle */
     double m_angle;
 

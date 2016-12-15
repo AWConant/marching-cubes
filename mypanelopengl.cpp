@@ -1,5 +1,5 @@
 #include "mypanelopengl.h"
-#include "voxel.h"
+#include "marching.h"
 
 #include <cmath>
 #include <cstdlib>
@@ -9,6 +9,7 @@
 
 using std::cout;
 using std::endl;
+//using terr::marchAll;
 
 MyPanelOpenGL::MyPanelOpenGL(QWidget *parent) : QOpenGLWidget(parent) {
     m_shaderProgram=NULL;
@@ -18,12 +19,16 @@ MyPanelOpenGL::MyPanelOpenGL(QWidget *parent) : QOpenGLWidget(parent) {
     m_move_amt = 0.4;
     m_rot_amt = 6;
     m_angle = 45;
+    
+    m_res = 10;
 
     /* rotate to fix the axes */
     m_modelStack.push();
     m_modelStack.rotateX(-90);
 
-    showOptions();
+    // FIXME: Do we need to initialize m_model and/or m_projection?
+    
+    //showOptions();
 }
 
 MyPanelOpenGL::~MyPanelOpenGL() {
@@ -40,6 +45,8 @@ void MyPanelOpenGL::initializeGL() {
     m_projection.perspective(m_angle, 1, 0.1, -0.1);
 
     m_shaderProgram->bind();
+
+    m_voxels = marchAll(vec3(), 10.0, m_res);
 }
 
 void MyPanelOpenGL::resizeGL(int w, int h) {
@@ -59,6 +66,10 @@ void MyPanelOpenGL::paintGL() {
     m_shaderProgram->setUniformValue("model", m_model);
     m_shaderProgram->setUniformValue("projection", m_projection);
     m_shaderProgram->setUniformValue("camera", m_camera.matrix());
+
+    for (int i = 0; i < m_res*m_res*m_res; i++) {
+        m_voxels[i]->draw(m_shaderProgram);
+    }
 
     glFlush();
 }

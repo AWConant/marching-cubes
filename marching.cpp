@@ -1,5 +1,7 @@
 #include "marching.h"
+
 #include <cmath>
+#include <iostream>
 
 using terr::Voxel;
 using terr::vec3;
@@ -297,12 +299,27 @@ int triTable[256][16] =
     {0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
+void pv3(vec3 v) {
+    std::cout << v.x() << " " << v.y() << " " << v.z() << std::endl;
+}
+
 vec3 lerp(vec3 p1, vec3 p2, float d1, float d2) {
-  return vec3();
+    //if (d1 * d2 < 0) {
+    //std::cout << "lerp" << std::endl;
+    //pv3(p1);
+    //pv3(p2);
+    //std::cout << d1 << " " << d2 << std::endl << std::endl;
+    //}
+
+    if (std::abs(d1) < 0.000001) return p1;
+    if (std::abs(d2) < 0.000001) return p2;
+    if (std::abs(d1 - d2) < 0.000001) return p1;
+
+    return p1 + (-1*d1)*(p2 - p1)/(d2 - d1);
 }
 
 float density(vec3 p) {
-    return 0.0;
+    return -1*p.y() + 7;
 }
 
 /* NOTE: Assumes isolevel == 0 */
@@ -320,47 +337,59 @@ Voxel *marchCube(float ***densities, vec3 corner, float stepSize) {
         for (int j = 0; j <= 1; j++) {
             for (int k = 0; k <= 1; k++) {
                 dens[idx] = densities[x + i][y + j][z + k];
-                corners[idx++] = vec3(x + i, y + j, z + k) * stepSize;
+                //std::cout << densities[x + i][y + j][z + k] << std::endl;
+
+                corners[idx] = vec3(x + i, y + j, z + k) * stepSize;
+                //std::cout << corners[idx].x() << " " << corners[idx].y() << " " << corners[idx].z() << std::endl;
+                idx++;
             }
         }
     }
+    //std::cout << std::endl;
+
 
     /* Get the 0 <= idx <= 255 index for lookup tables */
     idx = 0;
-    for (int i = 0; i < 8; i++) {
-        if (dens[i] > 0) idx |= (int)pow(i, 2);
-    }
+    if (dens[0] < 0) idx |= 1;
+    if (dens[4] < 0) idx |= 2;
+    if (dens[5] < 0) idx |= 4;
+    if (dens[1] < 0) idx |= 8;
+    if (dens[2] < 0) idx |= 16;
+    if (dens[6] < 0) idx |= 32;
+    if (dens[7] < 0) idx |= 64;
+    if (dens[3] < 0) idx |= 128;
 
+    std::cout << "idx: " << idx << std::endl;
     vec3 triPoints[15];
     if (edgeTable[idx] == 0) return new Voxel(corner, triPoints, 0);
 
     vec3 triVertices[12];
 
-    /* Compute the vertices along each edge of the cube (if there are any) */
+    /* Find the vertices where the surface intersects the cube */
     if (edgeTable[idx] & 1)
-        triVertices[0] = lerp(corners[2], corners[3], dens[2], dens[3]);
+        triVertices[0] = lerp(corners[0],corners[4],dens[0],dens[4]);
     if (edgeTable[idx] & 2)
-        triVertices[1] = lerp(corners[3], corners[7], dens[3], dens[7]);
+        triVertices[1] = lerp(corners[4],corners[5],dens[4],dens[5]);
     if (edgeTable[idx] & 4)
-        triVertices[2] = lerp(corners[7], corners[6], dens[7], dens[6]);
+        triVertices[7] = lerp(corners[5],corners[1],dens[5],dens[1]);
     if (edgeTable[idx] & 8)
-        triVertices[3] = lerp(corners[6], corners[2], dens[6], dens[2]);
+        triVertices[3] = lerp(corners[1],corners[0],dens[1],dens[0]);
     if (edgeTable[idx] & 16)
-        triVertices[4] = lerp(corners[0], corners[1], dens[0], dens[1]);
+        triVertices[4] = lerp(corners[2],corners[6],dens[2],dens[6]);
     if (edgeTable[idx] & 32)
-        triVertices[5] = lerp(corners[1], corners[5], dens[1], dens[5]);
+        triVertices[5] = lerp(corners[6],corners[7],dens[6],dens[7]);
     if (edgeTable[idx] & 64)
-        triVertices[6] = lerp(corners[5], corners[4], dens[5], dens[4]);
+        triVertices[6] = lerp(corners[7],corners[3],dens[7],dens[3]);
     if (edgeTable[idx] & 128)
-        triVertices[7] = lerp(corners[4], corners[0], dens[4], dens[0]);
+        triVertices[7] = lerp(corners[3],corners[2],dens[3],dens[2]);
     if (edgeTable[idx] & 256)
-        triVertices[8] = lerp(corners[2], corners[0], dens[2], dens[0]);
+        triVertices[8] = lerp(corners[0],corners[2],dens[0],dens[2]);
     if (edgeTable[idx] & 512)
-        triVertices[9] = lerp(corners[3], corners[1], dens[3], dens[1]);
+        triVertices[9] = lerp(corners[4],corners[6],dens[4],dens[6]);
     if (edgeTable[idx] & 1024)
-        triVertices[10] = lerp(corners[7], corners[5], dens[7], dens[5]);
+        triVertices[10] = lerp(corners[5],corners[7],dens[5],dens[7]);
     if (edgeTable[idx] & 2048)
-        triVertices[11] = lerp(corners[6], corners[4], dens[6], dens[4]);
+        triVertices[11] = lerp(corners[1],corners[3],dens[1],dens[3]);
 
     /* Set coords of triangles in voxel, defined by the voxel edges connected 
      * by edges of the triangle. */
@@ -372,23 +401,31 @@ Voxel *marchCube(float ***densities, vec3 corner, float stepSize) {
         numTriangles++;
     }
 
+    for (int i=0;i<15;i++) {
+        pv3(triPoints[i]);
+    }
+    std::cout << std::endl; 
+
     return new Voxel(corner, triPoints, numTriangles);
 }
 
 Voxel **marchAll(vec3 fieldCorner, float fieldSize, int res) {
     float stepSize = fieldSize/res;
 
-    float ***densities = new float**[res];
-    for (int i = 0; i < res; i++) {
-        densities[i] = new float*[res];
-        for (int j = 0; j < res; j++) {
-            densities[i][j] = new float[res];
+    /* Initializes 3d array of densities */
+    float ***densities = new float**[res+1];
+    for (int i = 0; i < res+1; i++) {
+        densities[i] = new float*[res+1];
+        for (int j = 0; j < res+1; j++) {
+            densities[i][j] = new float[res+1];
         }
     }
 
-    for (int x = 0; x < res; x++) {
-        for (int y = 0; y < res; y++) {
-            for (int z = 0; z < res; z++) {
+    /* Calculate densities at each point in the space that we care about, as
+     * well as a "buffer" of 1 additional voxel in each direction. */
+    for (int x = 0; x < res+1; x++) {
+        for (int y = 0; y < res+1; y++) {
+            for (int z = 0; z < res+1; z++) {
                 vec3 p = vec3(x, y, z) * stepSize;
                 densities[x][y][z] = density(p);
             }
@@ -402,6 +439,7 @@ Voxel **marchAll(vec3 fieldCorner, float fieldSize, int res) {
             for (int z = 0; z < res; z++) {
                 int idx = res*res*x + res*y + z;
                 vec3 corner = vec3(x, y, z);
+                //std::cout << x << " " << y << " " << z << std::endl;
                 voxels[idx] = marchCube(densities, corner, stepSize);
             }
         }
