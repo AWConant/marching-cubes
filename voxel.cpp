@@ -15,7 +15,7 @@ Voxel::Voxel(vec3 corner, vec3 *triangles, vec3 *normals, int numTriangles):
         m_vbo->bind();
         m_vbo->allocate(2*m_dataSize);
         m_vbo->write(0, m_triangles, m_dataSize);
-        m_vbo->write(m_dataSize, m_normals, 2*m_dataSize);
+        m_vbo->write(m_dataSize, m_normals, m_dataSize);
         m_vbo->release();
     }
 }
