@@ -395,7 +395,13 @@ Voxel *marchCube(float ***densities, vec3 corner, float stepSize) {
 
         vec3 normal = vec3::crossProduct(triPoints[i + 1] - triPoints[i],
                                          triPoints[i + 2] - triPoints[i]);
-        normals[i] = normals[i + 1] = normals[i + 2] = normal.normalized();
+        normal.normalize();
+        // if (vec3::dotProduct(normal, triPoints[1 + 1] - triPoints[i]) < 0) {
+          // std::cout << "sadfkjh\n";
+          // normal *= -1;
+        // }
+        normals[i] = normals[i + 1] = normals[i + 2] = normal;
+        for (int i = 0; i < 3; i++) pv3(normals[i]);
 
         numTriangles++;
     }
