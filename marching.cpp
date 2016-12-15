@@ -2,6 +2,8 @@
 
 #include <cmath>
 #include <iostream>
+#include <glm/glm.hpp>
+#include <glm/gtc/noise.hpp>
 
 using terr::Voxel;
 using terr::vec3;
@@ -299,6 +301,53 @@ int triTable[256][16] =
     {0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
+float basicFreq(float x, float y, float freq, bool periodic = true) {
+  // x,y in range [0..1]
+  glm::vec2 p(x * freq, y * freq);
+  float val = 0.0f;
+  if (periodic) {
+    val = glm::perlin(p, glm::vec2(freq));
+  } else {
+    val = glm::perlin(p);
+  }
+
+  return val;
+}
+
+
+/* lumpy */
+float lumpy(float x, float y) {
+  float freq = 4;
+  float amp = 0.1;
+  float steps = 4;
+  float val = 0;
+  while (steps > 0) {
+    val += amp * basicFreq(x, y, freq);
+    amp *= 0.5;
+    freq *= 2;
+    steps--;
+  }
+  return val;
+}
+
+/* http://flafla2.github.io/2014/08/09/perlinnoise.html
+ * Ported from Flafla2's java implementation */
+float octavePerlin(float x, float y, float z, int octaves, float persistence) {
+    float total = 0;
+    float frequency = 1;
+    float amplitude = 1;
+    float maxValue = 0;
+    for(int i = 0; i < octaves; i++) {
+        total += glm::perlin(glm::vec3(x, y, z) * frequency) * amplitude;
+        
+        maxValue += amplitude;
+        
+        amplitude *= persistence;
+        frequency *= 2;
+    }
+    
+    return total/maxValue;
+}
 
 void pv3(vec3 v) {
     std::cout << v.x() << " " << v.y() << " " << v.z() << std::endl;
@@ -315,7 +364,11 @@ vec3 lerp(vec3 p1, vec3 p2, float d1, float d2) {
 
 
 float density(vec3 p) {
-    return -1*p.x()*p.y()*p.z() + 7;
+    float d = 0.;
+    //d += -1*p.x()*p.y()*p.z() + 7;
+    d += -1*p.y() + 7;
+    d += octavePerlin(p.x(), p.y(), p.z(), 30, 4);
+    return d;
 }
 
 
@@ -428,6 +481,8 @@ Voxel **marchAll(vec3 fieldCorner, float fieldSize, int res) {
             for (int z = 0; z < res+1; z++) {
                 vec3 p = (vec3(x , y, z) + fieldCorner) * stepSize;
                 densities[x][y][z] = density(p);
+                //densities[x][y][z] = octavePerlin(p.x(), p.y(), p.z(), 30, 4);
+                //densities[x][y][z] = lumpy(p.x(), p.y());
             }
         }
     }
