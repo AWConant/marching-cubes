@@ -19,14 +19,14 @@ MyPanelOpenGL::MyPanelOpenGL(QWidget *parent) : QOpenGLWidget(parent) {
     m_move_amt = 0.4;
     m_rot_amt = 6;
     m_angle = 45;
-    
-    m_res = 10;
 
+    // m_camera.pitch(-15 * m_rot_amt);
+    // m_camera.yaw(6 * m_rot_amt);
+    m_camera.back(40*m_move_amt);
+      
     /* rotate to fix the axes */
     m_modelStack.push();
-    m_modelStack.rotateX(-90);
-
-    // FIXME: Do we need to initialize m_model and/or m_projection?
+    // m_modelStack.rotateX(-90);
     
     //showOptions();
 }
@@ -46,7 +46,12 @@ void MyPanelOpenGL::initializeGL() {
 
     m_shaderProgram->bind();
 
-    m_voxels = marchAll(vec3(), 10.0, m_res);
+    m_fieldCorner = vec3();
+    m_res = 3;
+
+    m_voxels = marchAll(m_fieldCorner, 10.0, m_res);
+
+    glEnable(GL_LIGHTING);
 }
 
 void MyPanelOpenGL::resizeGL(int w, int h) {
@@ -57,7 +62,7 @@ void MyPanelOpenGL::paintGL() {
     /* clear both color and depth buffer */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glEnable(GL_CULL_FACE);
+    // glEnable(GL_CULL_FACE);
 
     if (!m_shaderProgram) { return; }
 

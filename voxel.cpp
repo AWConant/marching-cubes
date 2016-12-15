@@ -26,7 +26,6 @@ Voxel::Voxel(vec3 corner, vec3 *triangles, int numTriangles):
         m_vbo->allocate(dataSize);
         m_vbo->write(0, m_triangles, dataSize);
         m_vbo->release();
-        //std::cout << "segfaulting with " << corner.x() << " " << corner.y() << " " << corner.z() << std::endl;
     }
 }
 
@@ -54,7 +53,8 @@ Voxel::~Voxel(){
 }
 
 void Voxel::draw(QOpenGLShaderProgram* prog){
-    if(!prog){ return; }
+    if (!prog) return;
+
     m_vao->bind();
     m_vbo->bind();
     prog->bind();
@@ -69,7 +69,7 @@ void Voxel::draw(QOpenGLShaderProgram* prog){
 
     glDrawArrays(GL_TRIANGLES, 0, m_numTriangles*3);
 
-    prog->bind();
-    m_vbo->bind();
-    m_vao->bind();
+    prog->release();
+    m_vbo->release();
+    m_vao->release();
 }

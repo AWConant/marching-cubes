@@ -29,7 +29,11 @@ private:
     /* Array of pointers to voxels dividing up the data field */
     terr::Voxel **m_voxels;
 
+    /* Number of voxels per edge of containing cube */
     int m_res;
+
+    /* Bottom back left corner of containing cube */
+    vec3 m_fieldCorner;
 
     /* perspective projection angle */
     double m_angle;
