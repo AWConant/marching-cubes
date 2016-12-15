@@ -4,27 +4,18 @@
 
 using namespace terr;
 
-Voxel::Voxel(vec3 corner, vec3 *triangles, int numTriangles):
-    m_color(0,0,1,1), m_vao(NULL), m_vbo(NULL),
-    m_corner(corner), m_triangles(triangles), m_numTriangles(numTriangles)
+Voxel::Voxel(vec3 corner, vec3 *triangles, vec3 *normals, int numTriangles):
+    m_color(0.0,0,1,1), m_firstDraw(true), m_vao(NULL), m_vbo(NULL), 
+    m_corner(corner), m_triangles(triangles), m_normals(normals),
+    m_numTriangles(numTriangles)
 {
+    m_dataSize = m_numTriangles * 3 * sizeof(vec3);
 
-    //for (int i = 0; i < 15; i++) {
-    //    float x, y, z;
-    //    x = m_triangles[i].x();
-    //    y = m_triangles[i].y();
-    //    z = m_triangles[i].z();
-    //    if (((int)x | (int)y | (int)z)) {
-    //        std::cout <<  x << " " << y << " " << z << std::endl;
-    //    }
-    //}
-    //std::cout << std::endl;
-    
     if(initVBO()){
-        int dataSize = m_numTriangles * 3 * sizeof(vec3);
         m_vbo->bind();
-        m_vbo->allocate(dataSize);
-        m_vbo->write(0, m_triangles, dataSize);
+        m_vbo->allocate(2*m_dataSize);
+        m_vbo->write(0, m_triangles, m_dataSize);
+        m_vbo->write(m_dataSize, m_normals, 2*m_dataSize);
         m_vbo->release();
     }
 }
@@ -50,19 +41,42 @@ Voxel::~Voxel(){
         delete m_vao; m_vao=NULL;
     }
     delete m_triangles; m_triangles=NULL;
+    delete m_normals; m_normals=NULL;
+}
+
+void Voxel::setupVAO(QOpenGLShaderProgram *prog) {
+  m_vao->bind();
+  m_vbo->bind();
+
+  prog->setUniformValue("vColor", m_color);
+  prog->enableAttributeArray("vPosition");
+  prog->setAttributeBuffer("vPosition", GL_FLOAT, 0, 3, 0);
+
+  prog->enableAttributeArray("vNormal");
+  prog->setAttributeBuffer("vNormal", GL_FLOAT,
+                           15 * (sizeof(vec3) + sizeof(vec2)), 3, 0);
+
+  prog->enableAttributeArray("vTexture");
+  //int texOffset = (m_stacks-2)*m_stripsize+2*(m_slices+2);
+  //prog->setAttributeBuffer("vTexture",GL_FLOAT,texOffset*sizeof(vec3),2,0);
+
+  m_vao->release();
+  m_vbo->release();
 }
 
 void Voxel::draw(QOpenGLShaderProgram* prog){
     if (!prog) return;
 
+    if (m_firstDraw) {
+      setupVAO(prog);
+      m_firstDraw = false;
+    }
+
     m_vao->bind();
-    m_vbo->bind();
     prog->bind();
 
     prog->setUniformValue("vColor", m_color);
-    prog->enableAttributeArray("vPosition");
-    prog->setAttributeBuffer("vPosition", GL_FLOAT, 0, 3, 0);
-
+    prog->setUniformValue("vSColor", m_spec_color);
     //prog->enableAttributeArray("vTexture");
     //int texOffset = (m_stacks-2)*m_stripsize+2*(m_slices+2);
     //prog->setAttributeBuffer("vTexture",GL_FLOAT,texOffset*sizeof(vec3),2,0);

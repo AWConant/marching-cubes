@@ -39,6 +39,7 @@ MyPanelOpenGL::~MyPanelOpenGL() {
 void MyPanelOpenGL::initializeGL() {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_TEXTURE_2D);
+
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     createShaders();
 
@@ -67,10 +68,14 @@ void MyPanelOpenGL::paintGL() {
     if (!m_shaderProgram) { return; }
 
     m_shaderProgram->bind();
+    QMatrix4x4 mview = m_camera.matrix() * m_model;
     m_shaderProgram->setUniformValue("Tex0",0);
     m_shaderProgram->setUniformValue("model", m_model);
     m_shaderProgram->setUniformValue("projection", m_projection);
     m_shaderProgram->setUniformValue("camera", m_camera.matrix());
+    m_shaderProgram->setUniformValue("modelView", mview);
+    m_shaderProgram->setUniformValue("normalMatrix", mview.normalMatrix());
+    m_shaderProgram->setUniformValue("lightPos", vec4(10.0, 10.0, 0, 1.));
 
     for (int i = 0; i < m_res*m_res*m_res; i++) {
         m_voxels[i]->draw(m_shaderProgram);
@@ -151,12 +156,12 @@ void MyPanelOpenGL::createShaders() {
     destroyShaders(); //get rid of any old shaders
 
     m_vertexShader = new QOpenGLShader(QOpenGLShader::Vertex);
-    if (!m_vertexShader->compileSourceFile("shaders/vshader.glsl")){
+    if (!m_vertexShader->compileSourceFile("shaders/vfraglight.glsl")){
         qWarning() << m_vertexShader->log();
     }
 
     m_fragmentShader = new QOpenGLShader(QOpenGLShader::Fragment);
-    if(!m_fragmentShader->compileSourceFile("shaders/fshader.glsl")){
+    if(!m_fragmentShader->compileSourceFile("shaders/ffraglight.glsl")){
         qWarning() << m_fragmentShader->log();
     }
 

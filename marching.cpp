@@ -353,7 +353,8 @@ Voxel *marchCube(float ***densities, vec3 corner, float stepSize) {
     if (dens[3] < 0) idx |= 128;
 
     vec3 triPoints[15];
-    if (edgeTable[idx] == 0) return new Voxel(corner, triPoints, 0);
+    vec3 normals[15];
+    if (edgeTable[idx] == 0) return new Voxel(corner, triPoints, normals, 0);
 
     vec3 triVertices[12];
 
@@ -391,6 +392,11 @@ Voxel *marchCube(float ***densities, vec3 corner, float stepSize) {
         triPoints[i]     = triVertices[triTable[idx][i]];
         triPoints[i + 1] = triVertices[triTable[idx][i + 1]];
         triPoints[i + 2] = triVertices[triTable[idx][i + 2]];
+
+        vec3 normal = vec3::crossProduct(triPoints[i + 1] - triPoints[i],
+                                         triPoints[i + 2] - triPoints[i]);
+        normals[i] = normals[i + 1] = normals[i + 2] = normal.normalized();
+
         numTriangles++;
     }
 
@@ -399,7 +405,7 @@ Voxel *marchCube(float ***densities, vec3 corner, float stepSize) {
     // }
     // std::cout << std::endl; 
 
-    return new Voxel(corner, triPoints, numTriangles);
+    return new Voxel(corner, triPoints, normals, numTriangles);
 }
 
 
