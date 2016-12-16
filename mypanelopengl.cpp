@@ -15,8 +15,8 @@ MyPanelOpenGL::MyPanelOpenGL(QWidget *parent) : QOpenGLWidget(parent) {
     m_vertexShader=NULL;
     m_fragmentShader=NULL;
 
-    m_move_amt = 15;
-    m_rot_amt = 10;
+    m_move_amt = 10;
+    m_rot_amt = 8;
     m_angle = 45;
 
     m_gradientNormals = true;
