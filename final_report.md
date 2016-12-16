@@ -2,13 +2,6 @@
 
 ### *Andrew Conant and Oliver Newman*
 
-- What methods did you use (Shaders, CUDA, straight C++, others)?
-- What third party tools did you use, if any?
-- How do I compile run your program? Do I need any external data files? If so, 
-  where are they?
-- What where the primary features you implemented?
-- Is there anything missing that you wanted to add?
-
 ## Methods and Tools
 
 To implement the marching cubes algorithm and to render the scene that we 
@@ -59,12 +52,12 @@ cubes algorithm, which generate different types of terrain. For example,
 `plane` and `plain` (we couldn't decide which name was more appropriate)
 generate a flat plane extending in the *x* and *z* directions. `funky`
 generates a somewhat less realistic landscape with some rounded hills and 
-'floating' chunks of earth.
-
-<!-- TODO  - describe more functions once we implement them -->
+'floating' chunks of earth. And `curve` represents a sort of bowl-shaped form
+(essentially determined by `x*y*z`).
 
 
 ### Lighting
+<!-- TODO -->
 
 
 ## Further work
@@ -79,9 +72,11 @@ realistic as do the examples in [NVIDIA's procedural terrain
 generator](http://http.developer.nvidia.com/GPUGems3/gpugems3_ch01.html) that
 we referenced. This would have been more plausible if we had used CUDA to
 do march the cubes; since the number of cubes in the scene increases
-exponentially as the resolution increases, it is a fairly slow process and takes
+cubically as the resolution increases, it is a fairly slow process and takes
 an obnoxiously long time to run beyond a resolution of 100 or so voxels per
 side (which isn't quite enough to get really smooth-looking terrain).
+
+<!-- TODO just add another paragraph -->
 
 
 ## References
