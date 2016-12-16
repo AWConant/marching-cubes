@@ -50,12 +50,11 @@ void MyPanelOpenGL::initializeGL() {
     m_shaderProgram->bind();
 
     m_fieldCorner = vec3();
-    m_res = 30;
+    m_res = 35;
     m_fieldSize = 20;
 
     m_voxels = marchAll(m_fieldCorner, m_fieldSize, m_res);
 
-    //glEnable(GL_LIGHTING);
 }
 
 void MyPanelOpenGL::resizeGL(int w, int h) {
