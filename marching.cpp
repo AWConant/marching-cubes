@@ -339,18 +339,18 @@ float lumpy(float x, float y) {
 
 /* http://flafla2.github.io/2014/08/09/perlinnoise.html
  * Ported from Flafla2's java implementation */
-float octavePerlin(float x, float y, float z, int octaves, float persistence) {
+float octavePerlin(vec3 p, float freq, float amp, int octaves, float persistence) {
+    float x, y, z;
+    x = p.x(), y = p.y(), z = p.z();
     float total = 0;
-    float frequency = 1;
-    float amplitude = 1;
     float maxValue = 0;
     for(int i = 0; i < octaves; i++) {
-        total += glm::perlin(glm::vec3(x, y, z) * frequency) * amplitude;
+        total += glm::perlin(glm::vec3(x, y, z) * freq) * amp;
         
-        maxValue += amplitude;
+        maxValue += amp;
         
-        amplitude *= persistence;
-        frequency *= 2;
+        amp *= persistence;
+        freq *= 2;
     }
     
     return total/maxValue;
@@ -371,10 +371,10 @@ vec3 lerp(vec3 p1, vec3 p2, float d1, float d2) {
 
 float density(vec3 p) {
     float d = 0.;
-    d += -1*p.x()*p.y()*p.z() + 7;
+    //d += -1*p.x()*p.y()*p.z() + 7;
 
-    //d += -1*p.y() + 7;
-    //d += octavePerlin(p.x(), p.y(), p.z(), 30, 4);
+    d += -1*p.y()+5;
+    d += octavePerlin(p, 1, 1, 10, 2);
     return d;
 }
 
