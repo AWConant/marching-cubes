@@ -3,7 +3,7 @@
 #include <QtWidgets>
 #include <QtOpenGL>
 #include <QMatrix4x4>
-#include "matrixstack.h"
+
 #include "camera.h"
 #include "voxel.h"
 
@@ -55,7 +55,6 @@ private:
 
     QMatrix4x4 m_model; /* takes objects coordinates into world coordinates */
     QMatrix4x4 m_projection; /* takes world coordinates into clip coordinates */
-    cs40::MatrixStack m_modelStack; /* history of past model matrices */
     cs40::Camera m_camera;
 
     /* shaders and program */

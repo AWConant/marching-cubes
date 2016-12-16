@@ -26,8 +26,6 @@ MyPanelOpenGL::MyPanelOpenGL(QWidget *parent) : QOpenGLWidget(parent) {
     m_camera.up(70);
     m_camera.right(80);
       
-    m_modelStack.push();
-    
     showOptions();
 
     /* Get command line arguments from high-level QT application */
