@@ -55,7 +55,6 @@ void MyPanelOpenGL::initializeGL() {
 
     m_voxels = marchAll(m_fieldCorner, m_fieldSize, m_res);
 
-    //glEnable(GL_LIGHTING);
 }
 
 void MyPanelOpenGL::resizeGL(int w, int h) {
