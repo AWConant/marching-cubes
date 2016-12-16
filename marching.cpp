@@ -15,6 +15,10 @@
 using terr::Voxel;
 using terr::vec3;
 
+void pv3(vec3 v) {
+    std::cout << v.x() << " " << v.y() << " " << v.z() << std::endl;
+}
+
 /* Lookup tables taken from Paul Bourke's implementation. */
 int edgeTable[256]={
     0x0  , 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,
@@ -356,11 +360,6 @@ float octavePerlin(vec3 p, float freq, float amp, int octaves, float persistence
     return total/maxValue;
 }
 
-void pv3(vec3 v) {
-    std::cout << v.x() << " " << v.y() << " " << v.z() << std::endl;
-}
-
-
 vec3 lerp(vec3 p1, vec3 p2, float d1, float d2) {
     if (std::abs(d1) < 0.000001) return p1;
     if (std::abs(d2) < 0.000001) return p2;
@@ -369,13 +368,29 @@ vec3 lerp(vec3 p1, vec3 p2, float d1, float d2) {
     return p1 + (-1*d1)*(p2 - p1)/(d2 - d1);
 }
 
-float density(vec3 p) {
+/* Flat plane extending in the x and z directions */
+float plane(vec3 p) {
+    return -3*p.y()+5;
+}
+
+/* Flat plain extending in the x and z directions*/
+float plain(vec3 p) {
+    return plane(p);
+}
+
+/* Bumps, humps, and floating chunks of earth */
+float funky(vec3 p) {
     float d = 0.;
     //d += -1*p.x()*p.y()*p.z() + 7;
 
     d += -1*p.y()+5;
-    d += octavePerlin(p, 1, 1, 10, 2);
-    return d;
+    d += 20*std::abs(octavePerlin(p, 0.08, 100, 1, 1));
+    d += octavePerlin(p, 3, 10, 1, 1);
+    return 3*d;
+}
+
+float density(vec3 p) {
+  return plain(vec3 p);
 }
 
 /* NOTE: Assumes isolevel == 0 */

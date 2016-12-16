@@ -23,8 +23,8 @@ MyPanelOpenGL::MyPanelOpenGL(QWidget *parent) : QOpenGLWidget(parent) {
     // m_camera.pitch(-15 * m_rot_amt);
     // m_camera.yaw(6 * m_rot_amt);
     m_camera.back(80*m_move_amt);
-    m_camera.up(20*m_move_amt);
-    m_camera.right(20*m_move_amt);
+    m_camera.up(40*m_move_amt);
+    m_camera.right(80*m_move_amt);
       
     /* rotate to fix the axes */
     m_modelStack.push();
@@ -42,7 +42,7 @@ void MyPanelOpenGL::initializeGL() {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_TEXTURE_2D);
 
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearColor(0.0f, 0.5f, 1.0f, 0.0f);
     createShaders();
 
     m_projection.perspective(m_angle, 1, 0.1, -0.1);
@@ -51,7 +51,7 @@ void MyPanelOpenGL::initializeGL() {
 
     m_fieldCorner = vec3();
     m_res = 30;
-    m_fieldSize = 20;
+    m_fieldSize = 60;
 
     m_voxels = marchAll(m_fieldCorner, m_fieldSize, m_res);
 
