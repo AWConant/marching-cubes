@@ -20,17 +20,15 @@ MyPanelOpenGL::MyPanelOpenGL(QWidget *parent) : QOpenGLWidget(parent) {
     m_rot_amt = 6;
     m_angle = 45;
 
-    // m_camera.pitch(-15 * m_rot_amt);
-    // m_camera.yaw(6 * m_rot_amt);
     m_camera.back(80*m_move_amt);
     m_camera.up(40*m_move_amt);
     m_camera.right(80*m_move_amt);
       
-    /* rotate to fix the axes */
     m_modelStack.push();
-    // m_modelStack.rotateX(-90);
     
-    //showOptions();
+    showOptions();
+
+    m_densityFunction = QCoreApplication::arguments().at(1).toStdString();
 }
 
 MyPanelOpenGL::~MyPanelOpenGL() {
@@ -53,7 +51,8 @@ void MyPanelOpenGL::initializeGL() {
     m_res = 30;
     m_fieldSize = 60;
 
-    m_voxels = marchAll(m_fieldCorner, m_fieldSize, m_res);
+
+    m_voxels = marchAll(m_fieldCorner, m_fieldSize, m_res, m_densityFunction);
 
 }
 

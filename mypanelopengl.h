@@ -56,6 +56,9 @@ private:
     QOpenGLShader *m_fragmentShader;
     QOpenGLShaderProgram *m_shaderProgram;
 
+    /* Density function for marching cubes */
+    std::string m_densityFunction;
+
     /* print message showing keyboard controls */
     void showOptions();
 

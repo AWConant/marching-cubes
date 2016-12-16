@@ -356,23 +356,39 @@ float plain(vec3 p) {
     return plane(p);
 }
 
+/* */
+float rough(vec3 p) {
+    float d = 0.;
+
+    d += -1*p.y();
+    d += octavePerlin(p, 100, 50, 1, 1);
+    return d;
+}
+
 /* Bumps, humps, and floating chunks of earth */
 float funky(vec3 p) {
     float d = 0.;
-    //d += -1*p.x()*p.y()*p.z() + 7;
 
     d += -1*p.y()+5;
     d += 20*std::abs(octavePerlin(p, 0.08, 100, 1, 1));
-    d += octavePerlin(p, 3, 10, 1, 1);
     return 3*d;
 }
 
-/* Default density function */
-float density(vec3 p) {
-  return plain(vec3 p);
+/* Bumps, humps, and floating chunks of earth */
+float curve(vec3 p) {
+    return -1*p.x()*p.y()*p.z() + 30;
 }
 
-Voxel *marchCube(float ***densities, vec3 ***gradients, vec3 corner, float stepSize) {
+/* Runs the density function specified by the command line arg */
+float density(vec3 p, std::string densityFunction) {
+    if (densityFunction == "plain") return plain(p);
+    if (densityFunction == "plane") return plane(p);
+    if (densityFunction == "funky") return funky(p);
+    else return curve(p);
+}
+
+Voxel *marchCube(float ***densities, vec3 ***gradients, vec3 corner, 
+                 float stepSize) {
     float dens[8];
     vec3 corners[8];
     vec3 grads[8];
@@ -481,7 +497,8 @@ Voxel *marchCube(float ***densities, vec3 ***gradients, vec3 corner, float stepS
 }
 
 
-Voxel **marchAll(vec3 fieldCorner, float fieldSize, int res) {
+Voxel **marchAll(vec3 fieldCorner, float fieldSize, int res,
+                 std::string densityFunction) {
     float stepSize = fieldSize/res;
 
     /* Initialize 3d array of densities */
@@ -516,10 +533,13 @@ Voxel **marchAll(vec3 fieldCorner, float fieldSize, int res) {
                 vec3 py2 = (vec3(x, y-1, z) + fieldCorner) * stepSize;
                 vec3 pz1 = (vec3(x, y, z+1) + fieldCorner) * stepSize;
                 vec3 pz2 = (vec3(x, y, z-1) + fieldCorner) * stepSize;
-                densities[x][y][z] = density(p);
-                g_x = (density(px1) - density(px2))/stepSize;
-                g_y = (density(py1) - density(py2))/stepSize;
-                g_z = (density(pz1) - density(pz2))/stepSize;
+                densities[x][y][z] = density(p, densityFunction);
+                g_x = (density(px1, densityFunction) - 
+                    density(px2, densityFunction))/stepSize;
+                g_y = (density(py1, densityFunction) - 
+                    density(py2, densityFunction))/stepSize;
+                g_z = (density(pz1, densityFunction) -
+                    density(pz2, densityFunction))/stepSize;
                 grads[x][y][z] = vec3(g_x, g_y, g_z);
             }
         }

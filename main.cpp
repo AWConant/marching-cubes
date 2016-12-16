@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include <QApplication>
 #include <QSurfaceFormat>
+#include <iostream>
 
 int main(int argc, char *argv[])
 {
@@ -10,6 +11,10 @@ int main(int argc, char *argv[])
     format.setProfile(QSurfaceFormat::CoreProfile);
     QSurfaceFormat::setDefaultFormat(format);
 
+    if (argc != 2) {
+      std::cout << "Usage: ./terrain {funky|plain|plane|curve}" << std::endl;
+      return -1;
+    }
     QApplication a(argc, argv);
     MainWindow w;
     w.show();
