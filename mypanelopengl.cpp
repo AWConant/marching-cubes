@@ -48,7 +48,7 @@ void MyPanelOpenGL::initializeGL() {
     m_shaderProgram->bind();
 
     m_fieldCorner = vec3();
-    m_res = 20;
+    m_res = 30;
 
     m_voxels = marchAll(m_fieldCorner, 10.0, m_res);
 

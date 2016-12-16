@@ -3,6 +3,12 @@
 #include <cmath>
 #include <iostream>
 
+#include <QVector3D>
+#include <QColor>
+#include <QImage>
+#include <glm/glm.hpp>
+#include <glm/gtc/noise.hpp>
+
 using terr::Voxel;
 using terr::vec3;
 
@@ -314,10 +320,40 @@ vec3 lerp(vec3 p1, vec3 p2, float d1, float d2) {
 }
 
 
-float density(vec3 p) {
-    return -1*p.x()*p.y()*p.z() + 7;
+// float density(vec3 p) {
+    // return -1*p.x()*p.y()*p.z() + 20;
+// }
+
+float basicFreq(float x, float y, float z, float freq, bool periodic = true) {
+    // x,y in range [0..1]
+    glm::vec3 p(x * freq, y * freq, z * freq);
+    float val = 0.0f;
+    if (periodic) {
+        val = glm::perlin(p, glm::vec3(freq));
+    } else {
+        val = glm::perlin(p);
+    }
+
+    return val;
 }
 
+/* lumpy */
+float density(vec3 p) {
+    float x = p.x();
+    float y = p.y();
+    float z = p.z();
+    float freq = 4;
+    float amp = 0.5;
+    float steps = 4;
+    float val = 0;
+    while (steps > 0) {
+        val += amp * basicFreq(x, y, z, freq);
+        amp *= 0.5;
+        freq *= 2;
+        steps--;
+    }
+    return val;
+}
 
 /* NOTE: Assumes isolevel == 0 */
 Voxel *marchCube(float ***densities, vec3 corner, float stepSize) {
@@ -396,20 +432,13 @@ Voxel *marchCube(float ***densities, vec3 corner, float stepSize) {
         vec3 normal = vec3::crossProduct(triPoints[i + 1] - triPoints[i],
                                          triPoints[i + 2] - triPoints[i]);
         normal.normalize();
-        // if (vec3::dotProduct(normal, triPoints[1 + 1] - triPoints[i]) < 0) {
-          // std::cout << "sadfkjh\n";
-          // normal *= -1;
-        // }
+        if (vec3::dotProduct(normal, vec3(0, 0, 1))) {
+          normal *= -1;
+        }
         normals[i] = normals[i + 1] = normals[i + 2] = normal;
-        for (int i = 0; i < 3; i++) pv3(normals[i]);
 
         numTriangles++;
     }
-
-    // for (int i=0;i<15;i++) {
-        // pv3(triPoints[i]);
-    // }
-    // std::cout << std::endl; 
 
     return new Voxel(corner, triPoints, normals, numTriangles);
 }

@@ -9,7 +9,7 @@ Voxel::Voxel(vec3 corner, vec3 *triangles, vec3 *normals, int numTriangles):
     m_vao(NULL), m_vbo(NULL), m_corner(corner), m_triangles(triangles),
     m_normals(normals), m_numTriangles(numTriangles)
 {
-    m_dataSize = 15 * 3 * sizeof(vec3);
+    m_dataSize = 30 * sizeof(vec3);
 
     if(initVBO()){
         m_vbo->bind();
@@ -56,7 +56,7 @@ void Voxel::setupVAO(QOpenGLShaderProgram *prog) {
   prog->setAttributeBuffer("vNormal", GL_FLOAT,
                            15 * (sizeof(vec3) + sizeof(vec2)), 3, 0);
 
-  prog->enableAttributeArray("vTexture");
+  // prog->enableAttributeArray("vTexture");
   //int texOffset = (m_stacks-2)*m_stripsize+2*(m_slices+2);
   //prog->setAttributeBuffer("vTexture",GL_FLOAT,texOffset*sizeof(vec3),2,0);
 

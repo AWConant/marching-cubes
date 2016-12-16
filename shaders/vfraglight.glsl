@@ -9,7 +9,7 @@ uniform mat4 modelView;
 uniform vec4 lightPos;
 
 in vec4 vPosition;
-in vec2 vTexture;
+/* in vec2 vTexture; */
 in vec3 vNormal;
 
 out vec4 color;
