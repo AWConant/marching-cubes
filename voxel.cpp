@@ -5,17 +5,29 @@
 using namespace terr;
 
 Voxel::Voxel(vec3 corner, vec3 *triangles, vec3 *normals, int numTriangles):
-    m_color(1,0,0,1), m_spec_color(1, 1, 1, 1), m_firstDraw(true),
-    m_vao(NULL), m_vbo(NULL), m_corner(corner), m_triangles(triangles),
-    m_normals(normals), m_numTriangles(numTriangles)
+    m_color(1.0,0,0,1), m_spec_color(1.,1,1,1), m_firstDraw(true), m_vao(NULL), m_vbo(NULL), 
+    m_corner(corner), m_triangles(triangles), m_normals(normals),
+    m_numTriangles(numTriangles)
 {
-    m_dataSize = 30 * sizeof(vec3);
+    m_dataSize = numTriangles * sizeof(vec3);
+
+    vec2 *texCoords = new vec2[numTriangles*3];
+    for (int i = 0; i < numTriangles*3; i++) texCoords[i] = vec2(1,0);
+
+    //if(initVBO()){
+    //    m_vbo->bind();
+    //    m_vbo->allocate(2*m_dataSize);
+    //    m_vbo->write(0, m_triangles, m_dataSize);
+    //    m_vbo->write(m_dataSize, m_normals, *m_dataSize);
+    //    m_vbo->release();
+    //}
 
     if(initVBO()){
         m_vbo->bind();
-        m_vbo->allocate(2*m_dataSize);
-        m_vbo->write(0, m_triangles, m_dataSize);
-        m_vbo->write(m_dataSize, m_normals, m_dataSize);
+        m_vbo->allocate(m_numTriangles * 3 * (2 * sizeof(vec3) + sizeof(vec3)));
+        m_vbo->write(0, m_triangles, m_numTriangles*3 * sizeof(vec3));
+        m_vbo->write(m_numTriangles*3 * sizeof(vec3), texCoords, m_numTriangles*3*sizeof(vec2));
+        m_vbo->write(m_numTriangles*3*(sizeof(vec3) + sizeof(vec2)), m_normals, m_numTriangles*3 * sizeof(vec3));
         m_vbo->release();
     }
 }
@@ -53,8 +65,7 @@ void Voxel::setupVAO(QOpenGLShaderProgram *prog) {
   prog->setAttributeBuffer("vPosition", GL_FLOAT, 0, 3, 0);
 
   prog->enableAttributeArray("vNormal");
-  prog->setAttributeBuffer("vNormal", GL_FLOAT,
-                           15 * (sizeof(vec3) + sizeof(vec2)), 3, 0);
+  prog->setAttributeBuffer("vNormal", GL_FLOAT, m_dataSize, 3, 0);
 
   // prog->enableAttributeArray("vTexture");
   //int texOffset = (m_stacks-2)*m_stripsize+2*(m_slices+2);
@@ -65,7 +76,7 @@ void Voxel::setupVAO(QOpenGLShaderProgram *prog) {
 }
 
 void Voxel::draw(QOpenGLShaderProgram* prog){
-    if (!prog) return;
+    if (!prog || m_triangles == 0) return;
 
     if (m_firstDraw) {
       setupVAO(prog);

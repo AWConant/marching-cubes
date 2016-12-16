@@ -2,6 +2,9 @@
 
 #include <cmath>
 #include <iostream>
+#include <vector>
+#include <glm/glm.hpp>
+#include <glm/gtc/noise.hpp>
 
 #include <QVector3D>
 #include <QColor>
@@ -305,6 +308,53 @@ int triTable[256][16] =
     {0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
+float basicFreq(float x, float y, float freq, bool periodic = true) {
+  // x,y in range [0..1]
+  glm::vec2 p(x * freq, y * freq);
+  float val = 0.0f;
+  if (periodic) {
+    val = glm::perlin(p, glm::vec2(freq));
+  } else {
+    val = glm::perlin(p);
+  }
+
+  return val;
+}
+
+
+/* lumpy */
+float lumpy(float x, float y) {
+  float freq = 4;
+  float amp = 0.1;
+  float steps = 4;
+  float val = 0;
+  while (steps > 0) {
+    val += amp * basicFreq(x, y, freq);
+    amp *= 0.5;
+    freq *= 2;
+    steps--;
+  }
+  return val;
+}
+
+/* http://flafla2.github.io/2014/08/09/perlinnoise.html
+ * Ported from Flafla2's java implementation */
+float octavePerlin(float x, float y, float z, int octaves, float persistence) {
+    float total = 0;
+    float frequency = 1;
+    float amplitude = 1;
+    float maxValue = 0;
+    for(int i = 0; i < octaves; i++) {
+        total += glm::perlin(glm::vec3(x, y, z) * frequency) * amplitude;
+        
+        maxValue += amplitude;
+        
+        amplitude *= persistence;
+        frequency *= 2;
+    }
+    
+    return total/maxValue;
+}
 
 void pv3(vec3 v) {
     std::cout << v.x() << " " << v.y() << " " << v.z() << std::endl;
@@ -319,40 +369,13 @@ vec3 lerp(vec3 p1, vec3 p2, float d1, float d2) {
     return p1 + (-1*d1)*(p2 - p1)/(d2 - d1);
 }
 
-
-// float density(vec3 p) {
-    // return -1*p.x()*p.y()*p.z() + 20;
-// }
-
-float basicFreq(float x, float y, float z, float freq, bool periodic = true) {
-    // x,y in range [0..1]
-    glm::vec3 p(x * freq, y * freq, z * freq);
-    float val = 0.0f;
-    if (periodic) {
-        val = glm::perlin(p, glm::vec3(freq));
-    } else {
-        val = glm::perlin(p);
-    }
-
-    return val;
-}
-
-/* lumpy */
 float density(vec3 p) {
-    float x = p.x();
-    float y = p.y();
-    float z = p.z();
-    float freq = 4;
-    float amp = 0.5;
-    float steps = 4;
-    float val = 0;
-    while (steps > 0) {
-        val += amp * basicFreq(x, y, z, freq);
-        amp *= 0.5;
-        freq *= 2;
-        steps--;
-    }
-    return val;
+    float d = 0.;
+    d += -1*p.x()*p.y()*p.z() + 7;
+
+    //d += -1*p.y() + 7;
+    //d += octavePerlin(p.x(), p.y(), p.z(), 30, 4);
+    return d;
 }
 
 /* NOTE: Assumes isolevel == 0 */
@@ -388,8 +411,15 @@ Voxel *marchCube(float ***densities, vec3 corner, float stepSize) {
     if (dens[7] < 0) idx |= 64;
     if (dens[3] < 0) idx |= 128;
 
-    vec3 triPoints[15];
-    vec3 normals[15];
+    int numTriangles = 0;
+    for (int i = 0; triTable[idx][i] != -1; i += 3) {
+        numTriangles++;
+    }
+
+    vec3 *triPoints = new vec3[numTriangles*3];
+    vec3 *normals   = new vec3[numTriangles*3];
+
+    /* If this voxel does not lie on a density boundary, return empty Voxel */
     if (edgeTable[idx] == 0) return new Voxel(corner, triPoints, normals, 0);
 
     vec3 triVertices[12];
@@ -420,10 +450,10 @@ Voxel *marchCube(float ***densities, vec3 corner, float stepSize) {
     if (edgeTable[idx] & 2048)
         triVertices[11] = lerp(corners[1],corners[3],dens[1],dens[3]);
 
+    vec3 interpNorm = vec3(0., 0., 0.);
+
     /* Set coords of triangles in voxel, defined by the voxel edges connected 
      * by edges of the triangle. */
-    int numTriangles = 0;
-
     for (int i = 0; triTable[idx][i] != -1; i += 3) {
         triPoints[i]     = triVertices[triTable[idx][i]];
         triPoints[i + 1] = triVertices[triTable[idx][i + 1]];
@@ -432,13 +462,13 @@ Voxel *marchCube(float ***densities, vec3 corner, float stepSize) {
         vec3 normal = vec3::crossProduct(triPoints[i + 1] - triPoints[i],
                                          triPoints[i + 2] - triPoints[i]);
         normal.normalize();
-        if (vec3::dotProduct(normal, vec3(0, 0, 1))) {
-          normal *= -1;
-        }
-        normals[i] = normals[i + 1] = normals[i + 2] = normal;
+        interpNorm += normal;
 
-        numTriangles++;
+        //normals[i] = normals[i + 1] = normals[i + 2] = normal;
+
     }
+    interpNorm.normalize();
+    for (int i = 0; i < numTriangles*3; i++) normals[i] = interpNorm;
 
     return new Voxel(corner, triPoints, normals, numTriangles);
 }
@@ -455,6 +485,7 @@ Voxel **marchAll(vec3 fieldCorner, float fieldSize, int res) {
             densities[i][j] = new float[res+1];
         }
     }
+
 
     /* Calculate densities at each point in the space that we care about, as
      * well as a "buffer" of 1 additional voxel in each direction */

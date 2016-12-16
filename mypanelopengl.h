@@ -32,6 +32,8 @@ private:
     /* Number of voxels per edge of containing cube */
     int m_res;
 
+    float m_fieldSize;
+
     /* Bottom back left corner of containing cube */
     vec3 m_fieldCorner;
 

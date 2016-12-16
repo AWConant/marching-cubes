@@ -22,7 +22,9 @@ MyPanelOpenGL::MyPanelOpenGL(QWidget *parent) : QOpenGLWidget(parent) {
 
     // m_camera.pitch(-15 * m_rot_amt);
     // m_camera.yaw(6 * m_rot_amt);
-    m_camera.back(40*m_move_amt);
+    m_camera.back(80*m_move_amt);
+    m_camera.up(20*m_move_amt);
+    m_camera.right(20*m_move_amt);
       
     /* rotate to fix the axes */
     m_modelStack.push();
@@ -49,10 +51,11 @@ void MyPanelOpenGL::initializeGL() {
 
     m_fieldCorner = vec3();
     m_res = 30;
+    m_fieldSize = 20;
 
-    m_voxels = marchAll(m_fieldCorner, 10.0, m_res);
+    m_voxels = marchAll(m_fieldCorner, m_fieldSize, m_res);
 
-    glEnable(GL_LIGHTING);
+    //glEnable(GL_LIGHTING);
 }
 
 void MyPanelOpenGL::resizeGL(int w, int h) {
@@ -75,7 +78,7 @@ void MyPanelOpenGL::paintGL() {
     m_shaderProgram->setUniformValue("camera", m_camera.matrix());
     m_shaderProgram->setUniformValue("modelView", mview);
     m_shaderProgram->setUniformValue("normalMatrix", mview.normalMatrix());
-    m_shaderProgram->setUniformValue("lightPos", vec4(10.0, 10.0, 0, 1.));
+    m_shaderProgram->setUniformValue("lightPos", vec4(10.0, 50.0, 0, 1.));
 
     for (int i = 0; i < m_res*m_res*m_res; i++) {
         m_voxels[i]->draw(m_shaderProgram);
