@@ -34,6 +34,7 @@ protected:
     vec3 m_corner;
     vec3 *m_triangles;
     vec3 *m_normals;
+
     int m_numTriangles;
     int m_dataSize;
 };

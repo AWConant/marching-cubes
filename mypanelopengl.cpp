@@ -9,31 +9,40 @@
 
 using std::cout;
 using std::endl;
-//using terr::marchAll;
 
 MyPanelOpenGL::MyPanelOpenGL(QWidget *parent) : QOpenGLWidget(parent) {
     m_shaderProgram=NULL;
     m_vertexShader=NULL;
     m_fragmentShader=NULL;
 
-    m_move_amt = 0.4;
-    m_rot_amt = 6;
+    m_move_amt = 15;
+    m_rot_amt = 10;
     m_angle = 45;
 
-    m_camera.back(80*m_move_amt);
-    m_camera.up(40*m_move_amt);
-    m_camera.right(80*m_move_amt);
+    m_gradientNormals = true;
+
+    /* Put the camera in a reasonable initial position */
+    m_camera.back(250);
+    m_camera.up(70);
+    m_camera.right(80);
       
     m_modelStack.push();
     
     showOptions();
 
-    m_densityFunction = QCoreApplication::arguments().at(1).toStdString();
+    /* Get command line arguments from high-level QT application */
+    QStringList args = QCoreApplication::arguments();
+    m_densityFunction = args.at(1).toStdString();
+    m_res = args.at(2).toFloat();
+    m_fieldSize = args.at(3).toFloat();
+    m_gradientNormals = args.at(4).toFloat();
 }
 
 MyPanelOpenGL::~MyPanelOpenGL() {
     m_shaderProgram->release();
     destroyShaders();
+    for (int i = 0; i < m_res*m_res*m_res; i++) delete m_voxels[i];
+    delete [] m_voxels;
 }
 
 void MyPanelOpenGL::initializeGL() {
@@ -43,16 +52,14 @@ void MyPanelOpenGL::initializeGL() {
     glClearColor(0.0f, 0.5f, 1.0f, 0.0f);
     createShaders();
 
+    /* Initialize perspective projection */
     m_projection.perspective(m_angle, 1, 0.1, -0.1);
 
     m_shaderProgram->bind();
 
-    m_fieldCorner = vec3();
-    m_res = 30;
-    m_fieldSize = 60;
-
-
-    m_voxels = marchAll(m_fieldCorner, m_fieldSize, m_res, m_densityFunction);
+    /* Create triangle geometry for all voxels based on density function */
+    m_voxels = marchAll(vec3(), m_fieldSize, m_res, m_densityFunction,
+                        m_gradientNormals);
 
 }
 
@@ -64,8 +71,6 @@ void MyPanelOpenGL::paintGL() {
     /* clear both color and depth buffer */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // glEnable(GL_CULL_FACE);
-
     if (!m_shaderProgram) { return; }
 
     m_shaderProgram->bind();
@@ -76,8 +81,9 @@ void MyPanelOpenGL::paintGL() {
     m_shaderProgram->setUniformValue("camera", m_camera.matrix());
     m_shaderProgram->setUniformValue("modelView", mview);
     m_shaderProgram->setUniformValue("normalMatrix", mview.normalMatrix());
-    m_shaderProgram->setUniformValue("lightPos", vec4(10.0, 50.0, 0, 1.));
+    m_shaderProgram->setUniformValue("lightPos", vec4(60, 100, 60, 1.));
 
+    /* Draw the geometry inside every Voxel */
     for (int i = 0; i < m_res*m_res*m_res; i++) {
         m_voxels[i]->draw(m_shaderProgram);
     }

@@ -11,9 +11,13 @@ int main(int argc, char *argv[])
     format.setProfile(QSurfaceFormat::CoreProfile);
     QSurfaceFormat::setDefaultFormat(format);
 
-    if (argc != 2) {
-      std::cout << "Usage: ./terrain {funky|plain|plane|curve}" << std::endl;
-      return -1;
+    if (argc != 5) {
+        std::cout << "Usage: ./terrain "
+                     "{funky|plane|curve} "
+                     "{resolution} "
+                     "{size of field} "
+                     "{1 for gradient normals, 0 for face normals}" << std::endl;
+        return -1;
     }
     QApplication a(argc, argv);
     MainWindow w;

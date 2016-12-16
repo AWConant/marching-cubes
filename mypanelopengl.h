@@ -32,6 +32,9 @@ private:
     /* Number of voxels per edge of containing cube */
     int m_res;
 
+    /* Determines the side lengths of the large cubic region to be marched.
+     * Will be divided into m_res Voxels each with side length
+     * m_res/m_fieldSize */
     float m_fieldSize;
 
     /* Bottom back left corner of containing cube */
@@ -45,6 +48,10 @@ private:
 
     /* distance by which up, down, left, right, forward, back move */
     double m_move_amt;
+
+    /* 1 if using interpolated gradient normals, 0 if using triangle face
+     * normals.  */
+    float m_gradientNormals;
 
     QMatrix4x4 m_model; /* takes objects coordinates into world coordinates */
     QMatrix4x4 m_projection; /* takes world coordinates into clip coordinates */

@@ -9,25 +9,15 @@ Voxel::Voxel(vec3 corner, vec3 *triangles, vec3 *normals, int numTriangles):
     m_corner(corner), m_triangles(triangles), m_normals(normals),
     m_numTriangles(numTriangles)
 {
-    m_dataSize = numTriangles * sizeof(vec3);
-
-    vec2 *texCoords = new vec2[numTriangles*3];
-    for (int i = 0; i < numTriangles*3; i++) texCoords[i] = vec2(1,0);
-
-    //if(initVBO()){
-    //    m_vbo->bind();
-    //    m_vbo->allocate(2*m_dataSize);
-    //    m_vbo->write(0, m_triangles, m_dataSize);
-    //    m_vbo->write(m_dataSize, m_normals, *m_dataSize);
-    //    m_vbo->release();
-    //}
+    /* Each triangle is defined by three vec3s, so indicate the size of a
+     * single VBO write */
+    m_dataSize = numTriangles * sizeof(vec3) * 3;
 
     if(initVBO()){
         m_vbo->bind();
-        m_vbo->allocate(m_numTriangles * 3 * (2 * sizeof(vec3) + sizeof(vec3)));
-        m_vbo->write(0, m_triangles, m_numTriangles*3 * sizeof(vec3));
-        m_vbo->write(m_numTriangles*3 * sizeof(vec3), texCoords, m_numTriangles*3*sizeof(vec2));
-        m_vbo->write(m_numTriangles*3*(sizeof(vec3) + sizeof(vec2)), m_normals, m_numTriangles*3 * sizeof(vec3));
+        m_vbo->allocate(2 * m_dataSize);
+        m_vbo->write(0, m_triangles, m_dataSize);
+        m_vbo->write(m_dataSize, m_normals, m_dataSize);
         m_vbo->release();
     }
 }
@@ -52,8 +42,8 @@ Voxel::~Voxel(){
         m_vao->release();
         delete m_vao; m_vao=NULL;
     }
-    delete m_triangles; m_triangles=NULL;
-    delete m_normals; m_normals=NULL;
+    delete [] m_triangles; m_triangles=NULL;
+    delete [] m_normals; m_normals=NULL;
 }
 
 void Voxel::setupVAO(QOpenGLShaderProgram *prog) {
@@ -67,17 +57,16 @@ void Voxel::setupVAO(QOpenGLShaderProgram *prog) {
   prog->enableAttributeArray("vNormal");
   prog->setAttributeBuffer("vNormal", GL_FLOAT, m_dataSize, 3, 0);
 
-  // prog->enableAttributeArray("vTexture");
-  //int texOffset = (m_stacks-2)*m_stripsize+2*(m_slices+2);
-  //prog->setAttributeBuffer("vTexture",GL_FLOAT,texOffset*sizeof(vec3),2,0);
-
   m_vao->release();
   m_vbo->release();
 }
 
 void Voxel::draw(QOpenGLShaderProgram* prog){
+    /* Don't bother doing anything if there are no triangles to draw */
     if (!prog || m_triangles == 0) return;
 
+    /* The first time we try to draw, enable attribute arrays and buffers
+     * for triangle vertices and vertex normals. */
     if (m_firstDraw) {
       setupVAO(prog);
       m_firstDraw = false;
@@ -88,10 +77,8 @@ void Voxel::draw(QOpenGLShaderProgram* prog){
 
     prog->setUniformValue("vColor", m_color);
     prog->setUniformValue("vSColor", m_spec_color);
-    //prog->enableAttributeArray("vTexture");
-    //int texOffset = (m_stacks-2)*m_stripsize+2*(m_slices+2);
-    //prog->setAttributeBuffer("vTexture",GL_FLOAT,texOffset*sizeof(vec3),2,0);
 
+    /* Draw m_numTriangles sets of 3 vertices within this Voxel */
     glDrawArrays(GL_TRIANGLES, 0, m_numTriangles*3);
 
     prog->release();

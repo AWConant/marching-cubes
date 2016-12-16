@@ -9,7 +9,6 @@ uniform mat4 modelView;
 uniform vec4 lightPos;
 
 in vec4 vPosition;
-/* in vec2 vTexture; */
 in vec3 vNormal;
 
 out vec4 color;
@@ -20,7 +19,7 @@ out vec3 E;
 void main() {
   N = normalMatrix * vNormal;
   L = (camera * lightPos).xyz - (modelView * vPosition).xyz;
-  E = -(modelView * vPosition).xyz; // from pt to viewer
+  E = -(modelView * vPosition).xyz;
 
   gl_Position = projection * modelView * vPosition;
 }

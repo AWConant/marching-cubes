@@ -1,7 +1,6 @@
 #include "marching.h"
 
 #include <cmath>
-#include <iostream>
 #include <vector>
 #include <glm/glm.hpp>
 #include <glm/gtc/noise.hpp>
@@ -9,15 +8,9 @@
 #include <QVector3D>
 #include <QColor>
 #include <QImage>
-#include <glm/glm.hpp>
-#include <glm/gtc/noise.hpp>
 
 using terr::Voxel;
 using terr::vec3;
-
-void pv3(vec3 v) {
-    std::cout << v.x() << " " << v.y() << " " << v.z() << std::endl;
-}
 
 /* Lookup tables taken from Paul Bourke's implementation. */
 int edgeTable[256]={
@@ -333,15 +326,9 @@ float octavePerlin(vec3 p, float freq, float amp, int octaves, float persistence
 }
 
 vec3 lerp(vec3 p1, vec3 p2, float d1, float d2) {
-    if (std::abs(d1) < 0.000001) {
-        return p1;
-    }
-    if (std::abs(d2) < 0.000001) {
-        return p2;
-    }
-    if (std::abs(d1 - d2) < 0.000001) { 
-         return p1;
-    }
+    if (std::abs(d1) < 0.000001) return p1;
+    if (std::abs(d2) < 0.000001) return p2;
+    if (std::abs(d1 - d2) < 0.000001) return p1;
 
     return p1 + (-1*d1)*(p2 - p1)/(d2 - d1);
 }
@@ -349,20 +336,6 @@ vec3 lerp(vec3 p1, vec3 p2, float d1, float d2) {
 /* Flat plane extending in the x and z directions */
 float plane(vec3 p) {
     return -3*p.y()+5;
-}
-
-/* Flat plain extending in the x and z directions*/
-float plain(vec3 p) {
-    return plane(p);
-}
-
-/* */
-float rough(vec3 p) {
-    float d = 0.;
-
-    d += -1*p.y();
-    d += octavePerlin(p, 100, 50, 1, 1);
-    return d;
 }
 
 /* Bumps, humps, and floating chunks of earth */
@@ -374,44 +347,45 @@ float funky(vec3 p) {
     return 3*d;
 }
 
-/* Bumps, humps, and floating chunks of earth */
+/* Curve */
 float curve(vec3 p) {
     return -1*p.x()*p.y()*p.z() + 30;
 }
 
 /* Runs the density function specified by the command line arg */
 float density(vec3 p, std::string densityFunction) {
-    if (densityFunction == "plain") return plain(p);
-    if (densityFunction == "plane") return plane(p);
+    if (densityFunction == "curve") return curve(p);
     if (densityFunction == "funky") return funky(p);
-    else return curve(p);
+    else return plane(p);
 }
 
 Voxel *marchCube(float ***densities, vec3 ***gradients, vec3 corner, 
-                 float stepSize) {
-    float dens[8];
-    vec3 corners[8];
-    vec3 grads[8];
+                 float stepSize, float gradNorms) {
     int x, y, z;
     x = corner.x();
     y = corner.y();
     z = corner.z();
 
-    /* Get the densities and corners that we care about for this voxel. */
-    int idx = 0;
+    /* Get the corners for this cube and their densities/gradients */
+    float dens[8];
+    vec3 corners[8];
+    vec3 grads[8];
+    int cornerIdx = 0;
     for (int i = 0; i <= 1; i++) {
         for (int j = 0; j <= 1; j++) {
             for (int k = 0; k <= 1; k++) {
-                dens[idx] = densities[x + i][y + j][z + k];
-                grads[idx] = gradients[x + i][y + j][z + k];
-                corners[idx] = vec3(x + i, y + j, z + k) * stepSize;
-                idx++;
+                dens[cornerIdx] = densities[x + i][y + j][z + k];
+                grads[cornerIdx] = gradients[x + i][y + j][z + k];
+                corners[cornerIdx] = vec3(x + i, y + j, z + k) * stepSize;
+                cornerIdx++;
             }
         }
     }
 
-    /* Get the 0 <= idx <= 255 index for lookup tables */
-    idx = 0;
+    /* Get the 0 <= idx <= 255 index for lookup tables. Basically, set
+     * each bit if the corresponding corner has a density value below
+     * the threshold of 0. */
+    int idx = 0;
     if (dens[0] < 0) idx |= 1;
     if (dens[4] < 0) idx |= 2;
     if (dens[5] < 0) idx |= 4;
@@ -421,10 +395,9 @@ Voxel *marchCube(float ***densities, vec3 ***gradients, vec3 corner,
     if (dens[7] < 0) idx |= 64;
     if (dens[3] < 0) idx |= 128;
 
+    /* Count the number of triangles specified by the calculated idx */
     int numTriangles = 0;
-    for (int i = 0; triTable[idx][i] != -1; i += 3) {
-        numTriangles++;
-    }
+    for (int i = 0; triTable[idx][i] != -1; i += 3) numTriangles++;
 
     vec3 *triPoints = new vec3[numTriangles*3];
     vec3 *normals   = new vec3[numTriangles*3];
@@ -433,47 +406,50 @@ Voxel *marchCube(float ***densities, vec3 ***gradients, vec3 corner,
     if (edgeTable[idx] == 0) return new Voxel(corner, triPoints, normals, 0);
 
     vec3 triVertices[12];
-    vec3 interNormals[12];
+    vec3 triVertexNormals[12];
 
-    /* Find the vertices where the surface intersects the cube */
+    /* Find the vertices where the surface intersects the cube. If, according
+     * to the edgeTable, that edge is intersected by the surface, find the
+     * point where that happens by linearly interpolating between the 
+     * density values at the ends of the edge. Additionally, find the normal
+     * at that point by interpolating between the gradients at the adjacent
+     * corners. */
     if (edgeTable[idx] & 1)
-        triVertices[0] = lerp(corners[0],corners[4],dens[0],dens[4] );
-        interNormals[0] = lerp(grads[0],grads[4],dens[0],dens[4] );
+        triVertices[0] = lerp(corners[0], corners[4], dens[0], dens[4]);
+        triVertexNormals[0] = lerp(grads[0], grads[4], dens[0], dens[4] );
     if (edgeTable[idx] & 2)
-        triVertices[1] = lerp(corners[4],corners[5],dens[4],dens[5] );
-        interNormals[1] = lerp(grads[4],grads[5],dens[4],dens[5] );
+        triVertices[1] = lerp(corners[4], corners[5], dens[4], dens[5]);
+        triVertexNormals[1] = lerp(grads[4], grads[5], dens[4], dens[5]);
     if (edgeTable[idx] & 4)
-        triVertices[2] = lerp(corners[5],corners[1],dens[5],dens[1] );
-        interNormals[2] = lerp(grads[5],grads[1],dens[5],dens[1] );
+        triVertices[2] = lerp(corners[5], corners[1], dens[5], dens[1]);
+        triVertexNormals[2] = lerp(grads[5], grads[1], dens[5], dens[1]);
     if (edgeTable[idx] & 8)
-        triVertices[3] = lerp(corners[1],corners[0],dens[1],dens[0] );
-        interNormals[3] = lerp(grads[1],grads[0],dens[1],dens[0] );
+        triVertices[3] = lerp(corners[1], corners[0], dens[1], dens[0]);
+        triVertexNormals[3] = lerp(grads[1], grads[0], dens[1], dens[0]);
     if (edgeTable[idx] & 16)
-        triVertices[4] = lerp(corners[2],corners[6],dens[2],dens[6] );
-        interNormals[4] = lerp(grads[2],grads[6],dens[2],dens[6] );
+        triVertices[4] = lerp(corners[2], corners[6], dens[2], dens[6]);
+        triVertexNormals[4] = lerp(grads[2], grads[6], dens[2], dens[6]);
     if (edgeTable[idx] & 32)
-        triVertices[5] = lerp(corners[6],corners[7],dens[6],dens[7] );
-        interNormals[5] = lerp(grads[6],grads[7],dens[6],dens[7] );
+        triVertices[5] = lerp(corners[6], corners[7], dens[6], dens[7]);
+        triVertexNormals[5] = lerp(grads[6], grads[7], dens[6], dens[7]);
     if (edgeTable[idx] & 64)
-        triVertices[6] = lerp(corners[7],corners[3],dens[7],dens[3] );
-        interNormals[6] = lerp(grads[7],grads[3],dens[7],dens[3] );
+        triVertices[6] = lerp(corners[7], corners[3], dens[7], dens[3]);
+        triVertexNormals[6] = lerp(grads[7], grads[3], dens[7], dens[3]);
     if (edgeTable[idx] & 128)
-        triVertices[7] = lerp(corners[3],corners[2],dens[3],dens[2] );
-        interNormals[7] = lerp(grads[3],grads[2],dens[3],dens[2] );
+        triVertices[7] = lerp(corners[3], corners[2], dens[3], dens[2]);
+        triVertexNormals[7] = lerp(grads[3], grads[2], dens[3], dens[2]);
     if (edgeTable[idx] & 256)
-        triVertices[8] = lerp(corners[0],corners[2],dens[0],dens[2] );
-        interNormals[8] = lerp(grads[0],grads[2],dens[0],dens[2] );
+        triVertices[8] = lerp(corners[0], corners[2], dens[0], dens[2]);
+        triVertexNormals[8] = lerp(grads[0], grads[2], dens[0], dens[2]);
     if (edgeTable[idx] & 512)
-        triVertices[9] = lerp(corners[4],corners[6],dens[4],dens[6] );
-        interNormals[9] = lerp(grads[4],grads[6],dens[4],dens[6] );
+        triVertices[9] = lerp(corners[4], corners[6], dens[4], dens[6]);
+        triVertexNormals[9] = lerp(grads[4], grads[6], dens[4], dens[6]);
     if (edgeTable[idx] & 1024)
-        triVertices[10] = lerp(corners[5],corners[7],dens[5],dens[7]);
-        interNormals[10] = lerp(grads[5],grads[7],dens[5],dens[7]);
+        triVertices[10] = lerp(corners[5], corners[7], dens[5], dens[7]);
+        triVertexNormals[10] = lerp(grads[5], grads[7], dens[5], dens[7]);
     if (edgeTable[idx] & 2048)
-        triVertices[11] = lerp(corners[1],corners[3],dens[1],dens[3]);
-        interNormals[11] = lerp(grads[1],grads[3],dens[1],dens[3]);
-
-    //vec3 interpNorm = vec3(0., 0., 0.);
+        triVertices[11] = lerp(corners[1], corners[3], dens[1], dens[3]);
+        triVertexNormals[11] = lerp(grads[1], grads[3], dens[1], dens[3]);
 
     /* Set coords of triangles in voxel, defined by the voxel edges connected 
      * by edges of the triangle. */
@@ -482,15 +458,17 @@ Voxel *marchCube(float ***densities, vec3 ***gradients, vec3 corner,
         triPoints[i + 1] = triVertices[triTable[idx][i + 1]];
         triPoints[i + 2] = triVertices[triTable[idx][i + 2]];
 
-        //vec3 normal = vec3::crossProduct(triPoints[i + 1] - triPoints[i],
-        //                                 triPoints[i + 2] - triPoints[i]);
-        //normal.normalize();
-
-        //normals[i] = normals[i + 1] = normals[i + 2] = normal;
+        if (gradNorms) {
+            normals[i]   = -1*triVertexNormals[triTable[idx][i]].normalized();
+            normals[i+1] = -1*triVertexNormals[triTable[idx][i+1]].normalized();
+            normals[i+2] = -1*triVertexNormals[triTable[idx][i+2]].normalized();
+        } else {
+            vec3 normal = vec3::crossProduct(triPoints[i + 1] - triPoints[i],
+                                             triPoints[i + 2] - triPoints[i]);
+            normal.normalize();
+            normals[i] = normals[i + 1] = normals[i + 2] = -1*normal;
+        }
         
-        normals[i]     = interNormals[triTable[idx][i]].normalized();
-        normals[i + 1] = interNormals[triTable[idx][i + 1]].normalized();
-        normals[i + 2] = interNormals[triTable[idx][i + 2]].normalized();
     }
 
     return new Voxel(corner, triPoints, normals, numTriangles);
@@ -498,7 +476,7 @@ Voxel *marchCube(float ***densities, vec3 ***gradients, vec3 corner,
 
 
 Voxel **marchAll(vec3 fieldCorner, float fieldSize, int res,
-                 std::string densityFunction) {
+                 std::string densityFunction, float gradNorms) {
     float stepSize = fieldSize/res;
 
     /* Initialize 3d array of densities */
@@ -520,26 +498,30 @@ Voxel **marchAll(vec3 fieldCorner, float fieldSize, int res,
     }
 
     float g_x, g_y, g_z;
+    vec3 p, px1, px2, py1, py2, pz1, pz2;
     /* Calculate densities and gradients at each point in the space that we
      * care about, as well as a "buffer" of 1 additional voxel in each
      * direction */
     for (int x = 0; x < res+1; x++) {
         for (int y = 0; y < res+1; y++) {
             for (int z = 0; z < res+1; z++) {
-                vec3 p = (vec3(x, y, z) + fieldCorner) * stepSize;
-                vec3 px1 = (vec3(x+1, y, z) + fieldCorner) * stepSize;
-                vec3 px2 = (vec3(x-1, y, z) + fieldCorner) * stepSize;
-                vec3 py1 = (vec3(x, y+1, z) + fieldCorner) * stepSize;
-                vec3 py2 = (vec3(x, y-1, z) + fieldCorner) * stepSize;
-                vec3 pz1 = (vec3(x, y, z+1) + fieldCorner) * stepSize;
-                vec3 pz2 = (vec3(x, y, z-1) + fieldCorner) * stepSize;
+                /* Calculate density at p using specified density function */
+                p = (vec3(x, y, z) + fieldCorner) * stepSize;
                 densities[x][y][z] = density(p, densityFunction);
+
+                /* Calculate gradient at p using central differences */
+                px1 = (vec3(x+1, y, z) + fieldCorner) * stepSize;
+                px2 = (vec3(x-1, y, z) + fieldCorner) * stepSize;
+                py1 = (vec3(x, y+1, z) + fieldCorner) * stepSize;
+                py2 = (vec3(x, y-1, z) + fieldCorner) * stepSize;
+                pz1 = (vec3(x, y, z+1) + fieldCorner) * stepSize;
+                pz2 = (vec3(x, y, z-1) + fieldCorner) * stepSize;
                 g_x = (density(px1, densityFunction) - 
-                    density(px2, densityFunction))/stepSize;
+                       density(px2, densityFunction))/stepSize;
                 g_y = (density(py1, densityFunction) - 
-                    density(py2, densityFunction))/stepSize;
+                       density(py2, densityFunction))/stepSize;
                 g_z = (density(pz1, densityFunction) -
-                    density(pz2, densityFunction))/stepSize;
+                       density(pz2, densityFunction))/stepSize;
                 grads[x][y][z] = vec3(g_x, g_y, g_z);
             }
         }
@@ -554,7 +536,7 @@ Voxel **marchAll(vec3 fieldCorner, float fieldSize, int res,
             for (int z = 0; z < res; z++) {
                 int idx = res*res*x + res*y + z;
                 vec3 corner = vec3(x, y, z) + fieldCorner;
-                voxels[idx] = marchCube(densities, grads, corner, stepSize);
+                voxels[idx] = marchCube(densities, grads, corner, stepSize, gradNorms);
             }
         }
     }

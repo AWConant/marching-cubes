@@ -4,7 +4,7 @@
 
 ## Methods and Tools
 
-To implement the marching cubes algorithm and to render the scene that we 
+To implement the marching cubes algorithm and to render the scene that we
 generated, we used only standard OpenGL with vertex and fragment shaders.
 
 We used the GL math library in our density functions in order to generate
@@ -23,37 +23,66 @@ $ mkdir build
 $ cd build
 $ cmake ..
 $ make -j8
-$ ./terrain
+$ ./terrain {funky|plane|curve} {resolution} {field size} {1|0 (gradient normals?)}
+```
+
+{funky|plane|curve} specifies which of the three implemented density functions
+to use to generate the mesh geometry.
+
+{resolution} specifies the number of voxels per field side. Each voxel ends up
+having side lengths equal to (resolution/fieldsize). Higher resolutions produce
+more detailed geometries.
+
+{field size} specifies the "length" of each side of the field. Basically, the
+size of the cube that will be divided into voxels.
+
+{1|0 (gradient normals?)} specifies whether gradient or face normals will be
+used. Gradient normals are prettier, so we recommend that, but definitely
+check out both options.
+
+Some interesting examples:
+
+```bash
+$ ./terrain funky 5 100 1
+$ ./terrain funky 10 100 1
+$ ./terrain funky 20 100 1
+$ ./terrain funky 40 100 1
+$ ./terrain curve 5 100 1
+$ ./terrain curve 10 100 1
+$ ./terrain curve 20 100 1
+$ ./terrain curve 40 100 1
+$ ./terrain plane 5 100 1
 ```
 
 ## Features
 
-### Marching Cubes 
+### Marching Cubes
 
 The biggest part of our project, both in terms of the time put into implementing
 it and extent to which our final product is reliant on it, is the marching
 cubes algorithm, which actually allows us to render a graphical representation
-of the density function we use. Marching cubes works by dividing the 
-cube-shaped scene into a three-dimensional grid of cubes (a.k.a. voxels, with 
+of an arbitrary density function. Marching cubes works by dividing the
+cube-shaped scene into a three-dimensional grid of cubes (a.k.a. voxels, with
 the number of cubes per side specified by the value of `m_res` in
 `mypanelopengl.cpp`. For each voxel, the density at each vertex is calculated,
-and then based on these values the 'shape' of the voxel is determined. If a
-linear interpolation between each adjacent pair of vertices reveals that the
+and then based on these values the 'shape' of the voxel is determined. If
+linear interpolation between a pair of adjacent vertices reveals that the
 0-isolevel of the density function passes through the cube, then the values of
 the vertex densities relative to zero are used to index into a lookup table to
 find the arrangement of up to five triangles which best represents the density
-function 0-isolevel within that voxel.
+function within that voxel.
 
 
 ### Density Functions
 
-We also implemented several different density functions to use in the marching
+We implemented several different density functions to use in the marching
 cubes algorithm, which generate different types of terrain. For example,
-`plane` and `plain` (we couldn't decide which name was more appropriate)
+`plane`
 generate a flat plane extending in the *x* and *z* directions. `funky`
-generates a somewhat less realistic landscape with some rounded hills and 
+generates a somewhat less realistic landscape with some rounded hills and
 'floating' chunks of earth. And `curve` represents a sort of bowl-shaped form
 (essentially determined by `x*y*z`).
+
 
 
 ### Lighting
@@ -86,7 +115,7 @@ side (which isn't quite enough to get really smooth-looking terrain).
 
 Finally, the terrain is necessarily enclosed in a 3-dimensional cube, but in
 some of the examples we referenced, the terrain faded off into the distance
-in the background instead of just ending at a cliff over a void. We had hoped 
+in the background instead of just ending at a cliff over a void. We had hoped
 to be able to implement something like this for our project (or perhaps to just
 constrain the user's movements so as to make it impossible to get high enough
 or close enough to the edge to see the dropoff).
