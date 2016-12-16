@@ -1,9 +1,11 @@
 # Procedural Terrain Generation Using the Marching Cubes Algorithm
-Andrew Conant and Oliver Newman
+
+### *Andrew Conant and Oliver Newman*
 
 - What methods did you use (Shaders, CUDA, straight C++, others)?
 - What third party tools did you use, if any?
-- How do I compile run your program? Do I need any external data files? If so, where are they?
+- How do I compile run your program? Do I need any external data files? If so, 
+  where are they?
 - What where the primary features you implemented?
 - Is there anything missing that you wanted to add?
 
@@ -34,24 +36,49 @@ $ ./terrain
 ## Features
 
 ### Marching Cubes 
+
 The biggest part of our project, both in terms of the time put into implementing
 it and extent to which our final product is reliant on it, is the marching
 cubes algorithm, which actually allows us to render a graphical representation
-of the density function we use.
+of the density function we use. Marching cubes works by dividing the 
+cube-shaped scene into a three-dimensional grid of cubes (a.k.a. voxels, with 
+the number of cubes per side specified by the value of `m_res` in
+`mypanelopengl.cpp`. For each voxel, the density at each vertex is calculated,
+and then based on these values the 'shape' of the voxel is determined. If a
+linear interpolation between each adjacent pair of vertices reveals that the
+density function evaluates to 0 at some point in the voxel, 
 
-### Lighting
 
 ### Density Functions
 
 We also implemented several different density functions to use in the marching
 cubes algorithm, which generate different types of terrain. For example,
-`plane` and `plain` generate a flat plane extending in the *x* and *z* 
-directions. `funky` generates a sort of Arches National Park-esque landscape
-with some rounded hills and even some floating chunks of earth.
+`plane` and `plain` (we couldn't decide which name was more appropriate)
+generate a flat plane extending in the *x* and *z* directions. `funky`
+generates a somewhat less realistic landscape with some rounded hills and 
+'floating' chunks of earth.
 
+<!-- TODO  - describe more functions once we implement them -->
+
+
+### Lighting
 
 
 ## Further work
+
+We had hoped to be able to apply different textures to our landscape in order
+to make it even more realistic by giving the appearance of having grass, rock,
+dirt, snow, etc., but implementing and debugging the marching cubes algorithm
+proved to be a more daunting task than we had anticipated.
+
+We had also planned to make landscape that looked as high-definition and
+realistic as do the examples in [NVIDIA's procedural terrain
+generator](http://http.developer.nvidia.com/GPUGems3/gpugems3_ch01.html) that
+we referenced. This would have been more plausible if we had used CUDA to
+do march the cubes; since the number of cubes in the scene increases
+exponentially as the resolution increases, it is a fairly slow process and takes
+an obnoxiously long time to run beyond a resolution of 100 or so voxels per
+side (which isn't quite enough to get really smooth-looking terrain).
 
 
 ## References
