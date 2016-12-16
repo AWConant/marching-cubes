@@ -46,7 +46,10 @@ the number of cubes per side specified by the value of `m_res` in
 `mypanelopengl.cpp`. For each voxel, the density at each vertex is calculated,
 and then based on these values the 'shape' of the voxel is determined. If a
 linear interpolation between each adjacent pair of vertices reveals that the
-density function evaluates to 0 at some point in the voxel, 
+0-isolevel of the density function passes through the cube, then the values of
+the vertex densities relative to zero are used to index into a lookup table to
+find the arrangement of up to five triangles which best represents the density
+function 0-isolevel within that voxel.
 
 
 ### Density Functions
