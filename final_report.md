@@ -109,7 +109,9 @@ order to do better than this, we need the normal to the _isosurface_ itself.
 To calculate this, we introduce another element that we need to store:
 the gradients of the density function at each corner of each voxel. To
 calculate this, we use the following differences and pack the three gradient
-components into a vector.
+components into a vector. In this case, each delta is equivalent to the side
+length of each voxel, D denotes the density function, and (i,j,k) denotes the
+corner of an arbitrary voxel.
 
 <img src="imgs/eq.png" alt="Calculation of gradient at point (i,j,k)" style="width: 400px;"/>
 
