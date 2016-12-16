@@ -60,6 +60,14 @@ generates a somewhat less realistic landscape with some rounded hills and
 <!-- TODO -->
 
 
+### Movement
+
+Much as in the solar system lab, the user can move about our landscape using
+keyboard controls which are printed out when the program begins. The user is
+able to pan, zoom, and move about the scene, thanks to the use of a camera
+object like the one we used in the solar system lab.
+
+
 ## Further work
 
 We had hoped to be able to apply different textures to our landscape in order
@@ -76,7 +84,12 @@ cubically as the resolution increases, it is a fairly slow process and takes
 an obnoxiously long time to run beyond a resolution of 100 or so voxels per
 side (which isn't quite enough to get really smooth-looking terrain).
 
-<!-- TODO just add another paragraph -->
+Finally, the terrain is necessarily enclosed in a 3-dimensional cube, but in
+some of the examples we referenced, the terrain faded off into the distance
+in the background instead of just ending at a cliff over a void. We had hoped 
+to be able to implement something like this for our project (or perhaps to just
+constrain the user's movements so as to make it impossible to get high enough
+or close enough to the edge to see the dropoff).
 
 
 ## References
