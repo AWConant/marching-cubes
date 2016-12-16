@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QtOpenGL>
+#include <vector>
 
 namespace terr {
     typedef QVector2D vec2;

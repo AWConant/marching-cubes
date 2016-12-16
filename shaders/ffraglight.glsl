@@ -20,14 +20,14 @@ void main() {
   float Kd = max(dot(LL, NN), 0.0);
   float Ks = pow(max(dot(NN, H), 0.0), 80);
 
-  ambient = vColor * 0.2;
+  ambient = vColor * 0.3;
   diffuse = vColor * Kd * 0.5;
   specular = vec4(0, 0, 0, 1);
-  /*
-   * if (dot(LL, NN) > 0) {
-   *   specular = vSColor * Ks * 0.3;
-   * }
-   */
+ 
+  //if (dot(LL, NN) > 0) {
+  //  specular = vSColor * Ks * 0.3;
+  //}
+ 
 
   fragColor = vec4((ambient + diffuse + specular).xyz, 1);
   /* fragColor = vec4(0.5*(NN+vec3(1,1,1)),1); */
