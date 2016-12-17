@@ -44,8 +44,8 @@ set(SRC
 )
 
 set(SHADERS
-  shaders/vshader.glsl
-  shaders/fshader.glsl
+  shaders/vfraglight.glsl
+  shaders/ffraglight.glsl
 )
 
 set(SHDRS voxel.h marching.h camera.h)

@@ -90,7 +90,7 @@ generates a somewhat less realistic landscape with some rounded hills and
 capable of rendering any well-defined density function that maps from 3-space
 to floating point values. Some density functions are obviously nicer looking
 than others, so developing an interesting-looking density function is a bit of
-an art. Additionally,
+an art.
 
 ### Lighting
 
